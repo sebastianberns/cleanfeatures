@@ -11,7 +11,7 @@ class InceptionV3W(Module):
     Wrapper around Inception V3 torchscript model provided here
     https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt
 
-        path (str): locally saved inception weights
+        path (str): locally saved inception model snapshot
     """
     def __init__(self, path=Path("./"), device=None):
         super(InceptionV3W, self).__init__()
