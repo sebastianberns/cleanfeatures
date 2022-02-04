@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import logging
+from pathlib import Path
 
 import torch
 
@@ -33,17 +34,19 @@ class CleanFeatures:
         path (str or Path): Path to snapshot of embedding model (i.e. Inception)
         device (str or device): Device to run model on (e.g. 'cuda' or 'cpu')
     """
-    def __init__(self, model_path, device=None, log='warning'):
+    def __init__(self, model_path='./models', device=None, log='warning'):
+        model_path = Path(model_path)  # Make sure this is a Path object
+
         # If device == None, set to cuda if available, otherwise set to cpu
         device = device or 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device = torch.device(device)
 
         logging.basicConfig(format='%(message)s', level=loglevels[log])
 
-        logging.info('Building resizer...')
+        logging.info('Building resizer')
         self.resizer = Resizer()
 
-        logging.info('Loading model...')
+        logging.info('Loading model')
         self.model = InceptionV3W(model_path, device=self.device)
 
         logging.info('CleanFeatures ready.')

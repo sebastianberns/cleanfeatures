@@ -13,8 +13,10 @@ class InceptionV3W(Module):
 
         path (str): locally saved inception model snapshot
     """
-    def __init__(self, path=Path("./"), device=None):
+    def __init__(self, path='./models', device=None):
         super(InceptionV3W, self).__init__()
+
+        path = Path(path)  # Make sure this is a Path object
 
         self.model_name = "InceptionV3"
         self.model_url = "https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt"
