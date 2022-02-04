@@ -41,6 +41,7 @@ class CleanFeatures:
         device = device or 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device = torch.device(device)
 
+        assert log in loglevels.keys(), f"Log level {log} not available."
         logging.basicConfig(format='%(message)s', level=loglevels[log])
 
         logging.info('Building resizer')
