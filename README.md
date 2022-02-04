@@ -23,6 +23,16 @@ features = cf(images)  # 3.
 2. Create a new instance, optionally providing a directory path. This can be either the place the model snapshot is already saved, or the place it should be downloaded and saved to.
 3. Pass a batch of images to compute the corresponding 'clean' features
 
+### CleanFeatures parameters
+
+```python
+CleanFeatures(model_path='./models', device=None, log='warning')
+```
+
+- ```model_path``` (str or Path object): path to directory where model snapshot is saved or should be saved to. Optional, default: './models'.
+- ```device``` (str or torch.device): device which the loaded model will be allocated to. Optional, default: 'cuda' if a GPU is available, otherwise 'cpu'.
+- ```log``` (str): logging level (options: 'all', 'debug', 'info', 'warning', 'error', 'critical'), where any option will include all subsequent logging levels. Optional, default: 'warning'.
+
 ## References
 
 Parmar, G., Zhang, R., & Zhu, J.-Y. (2022). On Aliased Resizing and Surprising Subtleties in GAN Evaluation. [*arXiv preprint arXiv:2104.11222*](http://arxiv.org/abs/2104.11222).
