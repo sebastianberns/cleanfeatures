@@ -10,17 +10,18 @@ This is a custom implementation that builds on the best practices and partially 
 
 ## Usage
 
-```python
-from cleanfeatures import CleanFeatures  # 2.
+Assuming that the repository is available in the working directory.
 
-cf = CleanFeatures('path/to/inception/snapshot/')  # 3.
-features = cf(images)  # 4.
+```python
+from cleanfeatures import CleanFeatures  # 1.
+
+cf = CleanFeatures('path/to/inception/snapshot/')  # 2.
+features = cf(images)  # 3.
 ```
 
-1. Copy the repository to the working directory.
-2. Import the main class.
-3. Create a new instance, optionally providing a directory path. This can be either the place the model snapshot is already saved, or the place it should be downloaded and saved to.
-4. Pass a batch of images to compute the corresponding 'clean' features
+1. Import the main class.
+2. Create a new instance, optionally providing a directory path. This can be either the place the model snapshot is already saved, or the place it should be downloaded and saved to.
+3. Pass a batch of images to compute the corresponding 'clean' features
 
 ## References
 
