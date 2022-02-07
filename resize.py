@@ -14,6 +14,29 @@ class Resizer:
         self.width = width
         self.height = height
 
+    __call__ = _handle_input
+
+    """
+    Resize a batch, an image or a channel
+
+        input (Pytorch tensor): data matrix with values in range (0, 255)
+            [B, C, W, H]: batch of images
+            [C, W, H]: single image
+            [W, H]: individual channel
+
+    Returns a tensor of the resized input
+    """
+    def _handle_input(self, input):
+        dims = len(input.shape)
+        if dims == 4:
+            return self.batch_resize(input)
+        elif dims == 3:
+            return self.image_resize(input)
+        elif dims == 2:
+            return self.channel_resize(input)
+        else:
+            raise ValueError(f"Input with {dims} dimensions is not supported")
+
     """
     Resize a batch of images
         batch (tensor): [B, C, W, H]
@@ -62,8 +85,6 @@ class Resizer:
         img = Image.fromarray(channel_np, mode='F')  # Create Image from 32-bit floating point pixels
         img = img.resize((self.width, self.height), resample=Image.BICUBIC)  # Clean resize
         return torch.tensor(np.asarray(img, dtype=np.float32), device=device)
-
-    __call__ = batch_resize
 
     def __repr__(self):
         return f"Resizer class, {self.channels} x {self.width} x {self.height}"
