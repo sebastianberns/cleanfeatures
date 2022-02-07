@@ -20,9 +20,10 @@ class InceptionV3W(Module):
 
         self.model_name = "InceptionV3"
         self.model_url = "https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt"
+        self.input_channels = 3
         self.input_width = 299
         self.input_height = 299
-        self.features_length = 2048
+        self.num_features = 2048
 
         # download the network if it is not present at the given directory
         self.path = path = check_download_url(path, self.model_url)
@@ -51,5 +52,5 @@ class InceptionV3W(Module):
         x = x - 128.  # Center around zero
         x = x / 128.  # Scale to (-1, +1)
 
-        features = self.layers.forward(x, ).view((B, self.features_length))
+        features = self.layers.forward(x, ).view((B, self.num_features))
         return features

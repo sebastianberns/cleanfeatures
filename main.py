@@ -49,7 +49,6 @@ class CleanFeatures:
 
         logging.info('Loading model')
         self.model = InceptionV3W(model_path, device=self.device)
-        self.model_channels = 3
 
         logging.info('CleanFeatures ready.')
 
@@ -63,7 +62,6 @@ class CleanFeatures:
     """
     __call__ = _handle_input
 
-
     """
     Redirect calls based on input data type
 
@@ -75,13 +73,46 @@ class CleanFeatures:
         if isinstance(input, torch.Tensor):  # Tensor ready for processing
             return self.compute_features(input)
         elif isinstance(input, torch.nn.Module):  # Generator model
-            batch = self.sample_generator(input, *kwargs)
-            return self.compute_features_batch(batch)
+            return self.compute_features_from_generator(input, *kwargs)
         elif isinstance(input, torch.utils.data.DataLoader):  # Data set
-            batch = self.sample_dataset(input, *kwargs)
-            return self.compute_features_batch(batch)
+            return self.compute_features_from_dataset(input, *kwargs)
         else:
             raise ValueError(f"Input with {dims} dimensions is not supported")
+
+    """
+    Perform a gradient-free model forward pass
+    """
+    def _model_fwd(self, input):
+        with torch.no_grad():
+            return self.model(input)
+
+    """
+    Augment data dimensions to make it meet the model input requirements
+
+        input (Tensor): data of variable number of dimensions
+
+    Returns a tensor of the input data [B, 3, W, H]
+    """
+    def augment_dimensions(self, input):
+        channels = self.model.input_channels
+        dims = len(input.shape)
+
+        # Adjust number of dimensions
+        if dims == 2:  # [W, H]
+            input.unsqueeze_(0)  # Add channel dimension
+            logging.info("Added channel dimension")
+        if dims == 3:  # [C, W, H]
+            input.unsqueeze_(0)  # Add batch dimension
+            logging.info("Added batch dimension")
+        # Now all input is standardized to [B, C, W, H]
+        B, C, W, H = input.shape
+
+        if C < channels:  # Grayscale image
+            # Increase channel dimension with same data (just view, no copy)
+            input = input.expand(-1, channels, -1, -1)
+            logging.info(f"Expanded channel dimensions to {channels}")
+
+        return input
 
     """
     Compute features of batch, image or channel
@@ -91,8 +122,8 @@ class CleanFeatures:
             [C, W, H]: single image
             [W, H]: individual channel
 
-    Returns a tensor of the resized image batch [B, C, X, Y] in range (-1, +1),
-    where X and Y are the resized width and height
+    Returns a tensor of features [B, F] in range (-1, +1),
+    where F is the number of features
     """
     def compute_features(self, input):
         dims = len(input.shape)
@@ -113,18 +144,18 @@ class CleanFeatures:
 
         images (Pytorch tensor [B, C, W, H]): Batch of images with values in range (0, 255)
 
-    Returns a tensor of the resized image batch [B, C, X, Y] in range (-1, +1),
-    where X and Y are the resized width and height
+    Returns a tensor of features [B, F] in range (-1, +1),
+    where F is the number of features
     """
     def compute_features_batch(self, batch):
         logging.info("Computing features for {0} images of {2} x {3} px in {1} channels".format(*batch.shape))
 
-        logging.info('Resizing...')
+        logging.info("Resizing ...")
         batch_resized = self.resizer.batch_resize(batch)  # Clean resize of images to match expected model input
         logging.info("Resized images to {2} x {3} px.".format(*batch_resized.shape))
 
-        logging.info('Model forward pass...')
-        features = self.model(batch_resized)  # Embed model forward pass
+        logging.info("Model forward pass ...")
+        features = self._model_fwd(batch_resized)  # Embed model forward pass
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
 
@@ -133,21 +164,21 @@ class CleanFeatures:
 
         images (Pytorch tensor [C, W, H]): Single image with values in range (0, 255)
 
-    Returns a tensor of the resized image [C, X, Y] in range (-1, +1),
-    where X and Y are the resized width and height
+    Returns a tensor of features [B, F] in range (-1, +1),
+    where F is the number of features
     """
     def compute_features_image(self, image):
         logging.info("Computing features for single image of {1} x {2} px in {0} channels".format(*image.shape))
 
-        logging.info('Resizing...')
+        logging.info("Resizing ...")
         image_resized = self.resizer.image_resize(image)  # Clean resize of images to match expected model input
         logging.info("Resized image to {1} x {2} px.".format(*image_resized.shape))
 
         # Augment data to match model input dimensions
         image_resized = self.augment_dimensions(image_resized)
 
-        logging.info('Model forward pass...')
-        features = self.model(image_resized)  # Embed model forward pass
+        logging.info("Model forward pass ...")
+        features = self._model_fwd(image_resized)  # Embed model forward pass
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
 
@@ -156,54 +187,86 @@ class CleanFeatures:
 
         images (Pytorch tensor [W, H]): Individual channel with values in range (0, 255)
 
-    Returns a tensor of the resized channel [X, Y] in range (-1, +1),
-    where X and Y are the resized width and height
+    Returns a tensor of features [B, F] in range (-1, +1),
+    where F is the number of features
     """
     def compute_features_channel(self, channel):
         logging.info("Computing features for individual channel of {0} x {1} px".format(*channel.shape))
 
-        logging.info('Resizing...')
+        logging.info("Resizing ...")
         channel_resized = self.resizer.image_resize(channel)  # Clean resize of images to match expected model input
         logging.info("Resized channel to {0} x {1} px.".format(*channel_resized.shape))
 
         # Augment data to match model input dimensions
         image_resized = self.augment_dimensions(image_resized)
 
-        logging.info('Model forward pass...')
-        features = self.model(channel_resized)  # Embed model forward pass
+        logging.info("Model forward pass ...")
+        features = self._model_fwd(channel_resized)  # Embed model forward pass
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
 
     """
-    Augment data dimensions to make it meet the model input requirements
+    Compute features of samples from pre-trained generator
 
-        input (Tensor): data of variable number of dimensions
+        generator (Module): Pre-trained generator model
+        z_dim (int): Number of generator input dimensions
+        num_samples (int): Number of samples to generate and process
+        batch_size (int): Batch size for generator sampling
 
-    Returns a tensor of the input data [B, 3, W, H]
+    Returns a tensor of features [B, F] in range (-1, +1),
+    where F is the number of features
     """
-    def augment_dimensions(self, input):
-        channels = self.model_channels
-        dims = len(input.shape)
+    def compute_features_from_generator(self, generator, z_dim=512,
+                                        num_samples=50_000, batch_size=128):
+        logging.info(f"Computing features for {num_samples} samples from generator")
+        generator.eval()
+        num_features = self.model.num_features
+        features = torch.zeros((num_samples, num_features),
+                               device=self.device)
+        c = 0  # Counter
+        while c < num_samples:  # Until enough samples have been collected
+            b = min(batch_size, (num_samples - counter))  # Get batch size ...
+                                # last batch may need to be smaller
 
-        # Adjust number of dimensions
-        if dims == 2:  # [W, H]
-            input.unsqueeze_(0)  # Add channel dimension
-            logging.info('Added channel dimension')
-        if dims == 3:  # [C, W, H]
-            input.unsqueeze_(0)  # Add batch dimension
-            logging.info('Added batch dimension')
-        # Now all input is standardized to [B, C, W, H]
-        B, C, W, H = input.shape
+            z = torch.randn((b, z_dim), device=self.device)  # Random samples
+            with torch.no_grad():
+                samples = generator(z)  # Generate images
 
-        if C < channels:  # Grayscale image
-            # Increase channel dimension with same data (just view, no copy)
-            input = input.expand(-1, channels, -1, -1)
-            logging.info('Expanded channel dimensions to {channels}')
+            samples = self.resizer.batch_resize(samples)  # Clean resize
+            features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
+            c += b  # Increase counter
+        # Loop breaks when counter is equal to requested number of samples
+        logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
+        return features
 
-        return input
+    """
+    Compute features of samples from data set
 
-    def sample_generator(self, input, num_samples):
-        pass
+        dataloader (DataLoader): Instance of Pytorch data loader
+        num_samples (int): Number of samples to process
+        batch_size (int): Batch size for sampling
 
-    def sample_dataset(self, input, num_samples):
-        pass
+    Returns a tensor of features [B, F] in range (-1, +1),
+    where F is the number of features
+    """
+    def compute_features_from_dataset(self, dataloader, num_samples=50_000,
+                                      batch_size=128):
+        logging.info(f"Computing features for {num_samples} samples from data set")
+        dataiterator = iter(dataloader)
+        num_features = self.model.num_features
+        features = torch.zeros((num_samples, num_features),
+                               device=self.device)
+        c = 0  # Counter
+        while c < num_samples:  # Until enough samples have been collected
+            b = min(batch_size, (num_samples - counter))  # Get batch size ...
+                                # last batch may need to be smaller
+
+            samples, _ = next(dataiterator)  # Load samples
+            samples = samples[:b].to(self.device)  # Limit and convert
+
+            samples = self.resizer.batch_resize(samples)  # Clean resize
+            features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
+            c += b  # Increase counter
+        # Loop breaks when counter is equal to requested number of samples
+        logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
+        return features
