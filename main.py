@@ -44,11 +44,13 @@ class CleanFeatures:
         assert log in loglevels.keys(), f"Log level {log} not available."
         logging.basicConfig(format='%(message)s', level=loglevels[log])
 
-        logging.info('Building resizer')
-        self.resizer = Resizer()
-
         logging.info('Loading model')
         self.model = InceptionV3W(model_path, device=self.device)
+
+        logging.info('Building resizer')
+        self.resizer = Resizer(channels=self.model.channels,
+                               width=self.model.width,
+                               height=self.model.height)
 
         logging.info('CleanFeatures ready.')
 
@@ -126,82 +128,14 @@ class CleanFeatures:
     where F is the number of features
     """
     def compute_features(self, input):
-        dims = len(input.shape)
-        if dims == 4:
-            logging.info("Assuming input data is batch of images")
-            return compute_features_batch(input)
-        elif dims == 3:
-            logging.info("Assuming input data is single image")
-            return compute_features_image(input)
-        elif dims == 2:
-            logging.info("Assuming input data individual channel")
-            return compute_features_channel(input)
-        else:
-            raise ValueError(f"Input with {dims} dimensions is not supported")
-
-    """
-    Compute features of batch
-
-        images (Pytorch tensor [B, C, W, H]): Batch of images with values in range (0, 255)
-
-    Returns a tensor of features [B, F] in range (-1, +1),
-    where F is the number of features
-    """
-    def compute_features_batch(self, batch):
-        logging.info("Computing features for {0} images of {2} x {3} px in {1} channels".format(*batch.shape))
-
         logging.info("Resizing ...")
-        batch_resized = self.resizer.batch_resize(batch)  # Clean resize of images to match expected model input
-        logging.info("Resized images to {2} x {3} px.".format(*batch_resized.shape))
+        input = self.resizer(input)  # Clean resize
+
+        logging.info("Adjusting number of dimensions ...")
+        input = self.augment_dimensions(input)  # Adjust input dimensions
 
         logging.info("Model forward pass ...")
-        features = self._model_fwd(batch_resized)  # Embed model forward pass
-        logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
-        return features
-
-    """
-    Compute features of single image
-
-        images (Pytorch tensor [C, W, H]): Single image with values in range (0, 255)
-
-    Returns a tensor of features [B, F] in range (-1, +1),
-    where F is the number of features
-    """
-    def compute_features_image(self, image):
-        logging.info("Computing features for single image of {1} x {2} px in {0} channels".format(*image.shape))
-
-        logging.info("Resizing ...")
-        image_resized = self.resizer.image_resize(image)  # Clean resize of images to match expected model input
-        logging.info("Resized image to {1} x {2} px.".format(*image_resized.shape))
-
-        # Augment data to match model input dimensions
-        image_resized = self.augment_dimensions(image_resized)
-
-        logging.info("Model forward pass ...")
-        features = self._model_fwd(image_resized)  # Embed model forward pass
-        logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
-        return features
-
-    """
-    Compute features of individual channel
-
-        images (Pytorch tensor [W, H]): Individual channel with values in range (0, 255)
-
-    Returns a tensor of features [B, F] in range (-1, +1),
-    where F is the number of features
-    """
-    def compute_features_channel(self, channel):
-        logging.info("Computing features for individual channel of {0} x {1} px".format(*channel.shape))
-
-        logging.info("Resizing ...")
-        channel_resized = self.resizer.image_resize(channel)  # Clean resize of images to match expected model input
-        logging.info("Resized channel to {0} x {1} px.".format(*channel_resized.shape))
-
-        # Augment data to match model input dimensions
-        image_resized = self.augment_dimensions(image_resized)
-
-        logging.info("Model forward pass ...")
-        features = self._model_fwd(channel_resized)  # Embed model forward pass
+        features = self._model_fwd(input)  # Embed model forward pass
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
 
