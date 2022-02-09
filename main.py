@@ -155,7 +155,7 @@ class CleanFeatures:
                                         num_samples=50_000, batch_size=128):
         logging.info(f"Computing features for {num_samples} samples from generator")
         generator.eval()
-        num_features = self.model.num_features
+        num_features = self.num_features
         features = torch.zeros((num_samples, num_features),
                                device=self.device)
         c = 0  # Counter
@@ -188,7 +188,7 @@ class CleanFeatures:
                                       batch_size=128):
         logging.info(f"Computing features for {num_samples} samples from data set")
         dataiterator = iter(dataloader)
-        num_features = self.model.num_features
+        num_features = self.num_features
         features = torch.zeros((num_samples, num_features),
                                device=self.device)
         c = 0  # Counter
