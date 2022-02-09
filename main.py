@@ -46,6 +46,7 @@ class CleanFeatures:
 
         logging.info('Loading model')
         self.model = InceptionV3W(model_path, device=self.device)
+        self.num_features = self.model.num_features
 
         logging.info('Building resizer')
         self.resizer = Resizer(channels=self.model.channels,
