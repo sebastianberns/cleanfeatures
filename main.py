@@ -49,21 +49,11 @@ class CleanFeatures:
         self.num_features = self.model.num_features
 
         logging.info('Building resizer')
-        self.resizer = Resizer(channels=self.model.channels,
-                               width=self.model.width,
-                               height=self.model.height)
+        self.resizer = Resizer(channels=self.model.input_channels,
+                               width=self.model.input_width,
+                               height=self.model.input_height)
 
         logging.info('CleanFeatures ready.')
-
-    """
-    Direct call to CleanFeatures instance
-
-        ```python
-        cf = CleanFeatures(path)
-        feature = cf(input)
-        ```
-    """
-    __call__ = _handle_input
 
     """
     Redirect calls based on input data type
@@ -81,6 +71,16 @@ class CleanFeatures:
             return self.compute_features_from_dataset(input, *kwargs)
         else:
             raise ValueError(f"Input with {dims} dimensions is not supported")
+
+    """
+    Direct call to CleanFeatures instance
+
+        ```python
+        cf = CleanFeatures(path)
+        feature = cf(input)
+        ```
+    """
+    __call__ = _handle_input
 
     """
     Perform a gradient-free model forward pass
@@ -155,12 +155,11 @@ class CleanFeatures:
                                         num_samples=50_000, batch_size=128):
         logging.info(f"Computing features for {num_samples} samples from generator")
         generator.eval()
-        num_features = self.num_features
-        features = torch.zeros((num_samples, num_features),
+        features = torch.zeros((num_samples, self.num_features),
                                device=self.device)
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
-            b = min(batch_size, (num_samples - counter))  # Get batch size ...
+            b = min(batch_size, (num_samples - c))  # Get batch size ...
                                 # last batch may need to be smaller
 
             z = torch.randn((b, z_dim), device=self.device)  # Random samples
@@ -188,19 +187,21 @@ class CleanFeatures:
                                       batch_size=128):
         logging.info(f"Computing features for {num_samples} samples from data set")
         dataiterator = iter(dataloader)
-        num_features = self.num_features
-        features = torch.zeros((num_samples, num_features),
+        features = torch.zeros((num_samples, self.num_features),
                                device=self.device)
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
-            b = min(batch_size, (num_samples - counter))  # Get batch size ...
+            b = min(batch_size, (num_samples - c))  # Get batch size ...
                                 # last batch may need to be smaller
 
             samples, _ = next(dataiterator)  # Load samples
             samples = samples[:b].to(self.device)  # Limit and convert
 
             samples = self.resizer.batch_resize(samples)  # Clean resize
-            features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
+            # features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
+            out = self._model_fwd(samples)  # Model fwd pass
+            print(out.shape)
+            features[c:c+b] = out
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))

@@ -14,8 +14,6 @@ class Resizer:
         self.width = width
         self.height = height
 
-    __call__ = _handle_input
-
     """
     Resize a batch, an image or a channel
 
@@ -36,6 +34,8 @@ class Resizer:
             return self.channel_resize(input)
         else:
             raise ValueError(f"Input with {dims} dimensions is not supported")
+
+    __call__ = _handle_input
 
     """
     Resize a batch of images
