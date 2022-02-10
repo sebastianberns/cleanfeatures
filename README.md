@@ -33,6 +33,13 @@ CleanFeatures(model_path='./models', device=None, log='warning')
 - ```device``` (str or torch.device): device which the loaded model will be allocated to. Optional, default: 'cuda' if a GPU is available, otherwise 'cpu'.
 - ```log``` (str): logging level (options: 'all', 'debug', 'info', 'warning', 'error', 'critical'), where any option will include all subsequent logging levels. Optional, default: 'warning'.
 
+## Dependencies
+
+- Numpy
+- Pytorch 1.8 (does not work with version 1.9 because of some issues with the torchscript Inception model)
+- requests
+- PIL
+
 ## References
 
 Parmar, G., Zhang, R., & Zhu, J.-Y. (2022). On Aliased Resizing and Surprising Subtleties in GAN Evaluation. [*arXiv preprint arXiv:2104.11222*](http://arxiv.org/abs/2104.11222).

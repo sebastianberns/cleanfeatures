@@ -198,10 +198,7 @@ class CleanFeatures:
             samples = samples[:b].to(self.device)  # Limit and convert
 
             samples = self.resizer.batch_resize(samples)  # Clean resize
-            # features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
-            out = self._model_fwd(samples)  # Model fwd pass
-            print(out.shape)
-            features[c:c+b] = out
+            features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
