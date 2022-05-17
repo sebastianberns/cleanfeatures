@@ -9,16 +9,23 @@ Currently available models:
 
 This is a custom implementation that builds on the best practices and partially on the implementation of [GaParmar/clean-fid](https://github.com/GaParmar/clean-fid).
 
-## Dependencies
+## Setup
 
-- pytorch \*
+### Dependencies
+
+- Pytorch \*
 - numpy
 - requests
 - Pillow (PIL)
+- CLIP ([github.com/openai/CLIP](https://github.com/openai/CLIP))
 - ftfy
 - regex
 
-\* This repository not work with Pytorch version 1.9 because of some issues with the torchscript Inception model.
+\* This repository does not work with Pytorch version 1.9 because of some issues with the torchscript Inception model.
+
+### CLIP repository
+
+Copy the ```clip``` code directory ([github.com/openai/CLIP/tree/main/clip](https://github.com/openai/CLIP/tree/main/clip)) into the ```models``` directory.
 
 ## Usage
 
