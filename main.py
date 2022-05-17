@@ -34,11 +34,13 @@ class CleanFeatures:
         path (str or Path): Path to snapshot of embedding model (i.e. Inception)
         device (str or device): Device to run model on (e.g. 'cuda' or 'cpu')
     """
-    def __init__(self, model='InceptionV3W', model_path='./models',
-                 device=None, log='warning'):
+    def __init__(self, model_path='./models', model='InceptionV3W',
+                 device=None, log='warning', **kwargs):
+
+        # Check if model is implemented
         assert hasattr(models, model), f"Model {model} is not available"
 
-        model_path = Path(model_path)  # Make sure this is a Path object
+        model_path = Path(model_path).expanduser().resolve()  # Make sure this is a Path object
 
         # If device == None, set to cuda if available, otherwise set to cpu
         device = device or 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -49,7 +51,7 @@ class CleanFeatures:
 
         logging.info('Loading model')
         model_fn = getattr(models, model)  # Get executable from string
-        self.model = model_fn(model_path, device=self.device)
+        self.model = model_fn(model_path, self.device, **kwargs)
         self.num_features = self.model.num_features
 
         logging.info('Building resizer')
