@@ -87,4 +87,4 @@ class Resizer:
         return torch.tensor(np.asarray(img, dtype=np.float32), device=device)
 
     def __repr__(self):
-        return f"Resizer class, {self.channels} x {self.width} x {self.height}"
+        return f"Resizer, {self.channels} x {self.width} x {self.height} [C, W, H]"

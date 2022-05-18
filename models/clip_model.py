@@ -74,7 +74,8 @@ class CLIP(Module):
 
         assert clip_model in clip.available_models(), f"CLIP model '{clip_model}' not available"
 
-        self.model_name = f"CLIP {clip_model}"
+        self.name = f"CLIP {clip_model}"
+        self.url = clip._MODELS[clip_model]
         self.input_channels = 3
 
         config = _MODELS[clip_model]
@@ -88,14 +89,14 @@ class CLIP(Module):
         # Check if model is already downloaded
         clip_path = path/filename   # Build path to checkpoint file
         if clip_path.is_file():     # if it is a file
-            logging.info(f"Found {self.model_name} checkpoint in {path}")
+            logging.info(f"Found {self.name} checkpoint in {path}")
             clip_model = clip_path  # then load it
         else:  # Otherwise, download checkpoint
-            logging.info(f"Downloading {self.model_name} to {path}")
+            logging.info(f"Downloading {self.name} to {path}")
 
         # download the network if it is not present at the given directory
-        self.model, preprocess = clip.load(clip_model, device=device, jit=True,
-                                           download_root=path)
+        self.base, _ = clip.load(clip_model, device=device, jit=True,
+                                 download_root=path)
 
         # CLIP preprocessing normalization
         # https://github.com/openai/CLIP/blob/main/clip/clip.py#L85
@@ -112,5 +113,5 @@ class CLIP(Module):
     """
     def forward(self, x):
         input = self.normalization(x)
-        features = self.model.encode_image(input)
+        features = self.base.encode_image(input)
         return features

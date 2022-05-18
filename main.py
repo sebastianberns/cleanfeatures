@@ -212,3 +212,6 @@ class CleanFeatures:
    def set_log_level(self, log_level):
         assert log_level in log_levels.keys(), f"Log level {log_level} not available"
         logging.basicConfig(format='%(message)s', level=log_levels[log])
+
+    def __repr__(self):
+        return f"CleanFeatures, {self.model.name} embedding, {self.num_features} features"
