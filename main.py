@@ -17,7 +17,7 @@ Higher levels (lower is value) include all lower levels.
 E.g. 'critical' only shows critical messages, whereas 'warning' will show
 warnings, errors and critical messages.
 """
-loglevels = {
+log_levels = {
     'all': 0,  # Log all messages
     'debug': 10,
     'info': 20,
@@ -46,8 +46,7 @@ class CleanFeatures:
         device = device or 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device = torch.device(device)
 
-        assert log in loglevels.keys(), f"Log level {log} not available"
-        logging.basicConfig(format='%(message)s', level=loglevels[log])
+        self.set_log_level(log)
 
         logging.info('Loading model')
         model_fn = getattr(models, model)  # Get executable from string
@@ -209,3 +208,7 @@ class CleanFeatures:
         # Loop breaks when counter is equal to requested number of samples
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
+
+   def set_log_level(self, log_level):
+        assert log_level in log_levels.keys(), f"Log level {log_level} not available"
+        logging.basicConfig(format='%(message)s', level=log_levels[log])
