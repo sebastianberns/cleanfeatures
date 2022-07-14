@@ -27,6 +27,21 @@ log_levels = {
 }
 
 
+"""
+CleanFeatures class
+
+Attributes
+    model (torch.nn.Module): Embedding model
+    num_features (int): Number of dimensions of feature output
+
+Methods
+    augment_dimensions: Standardize input shape to [B, 3, W, H]
+    self: Compute features from any type of input
+    compute_features: Direct access to processing pipeline
+    compute_features_from_generator: Sample generator model
+    compute_features_from_dataset: Get sample from dataloader
+    set_log_level: Set level of logging output
+"""
 class CleanFeatures:
     """
     Initialize clean features processor
