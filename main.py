@@ -31,8 +31,11 @@ class CleanFeatures:
     """
     Initialize clean features processor
 
-        path (str or Path): Path to snapshot of embedding model (i.e. Inception)
-        device (str or device): Device to run model on (e.g. 'cuda' or 'cpu')
+        model_path (str or Path): Path to state dict of embedding model
+        model (str): Name of embedding model
+        device (str or device): Name of device for execution
+        log (str): Log level
+        kwargs (dict): Additional parameters for embedding model
     """
     def __init__(self, model_path='./models', model='InceptionV3W',
                  device=None, log='warning', **kwargs):
