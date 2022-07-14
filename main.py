@@ -59,7 +59,7 @@ class CleanFeatures:
         # Check if model is implemented
         assert hasattr(models, model), f"Model {model} is not available"
 
-        model_path = Path(model_path).expanduser().resolve()  # Make sure this is a Path object
+        model_path = self._get_path(model_path)
 
         # If device == None, set to cuda if available, otherwise set to cpu
         device = device or 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -166,6 +166,8 @@ class CleanFeatures:
 
         logging.info("Model forward pass ...")
         features = self._model_fwd(input)  # Embed model forward pass
+
+        self._features = features
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
 
@@ -199,6 +201,8 @@ class CleanFeatures:
             features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
+
+        self._features = features
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
 
@@ -230,12 +234,24 @@ class CleanFeatures:
             features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
+
+        self._features = features
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
+
+    def save(self, path="./"):
+        save_path = self._get_path(path)
+        save_path.mkdir(exist_ok=True)  # Create save directory
+        torch.save(self.features, save_path)
+        logging.info(f"Features saved to '{save_path}'")
 
     def set_log_level(self, log_level):
         assert log_level in log_levels.keys(), f"Log level {log_level} not available"
         logging.basicConfig(format='%(message)s', level=log_levels[log_level])
+
+    def _get_path(self, path):
+        # Ensure clean absolute Path object
+        return Path(path).expanduser().resolve()
 
     def __repr__(self):
         return f"CleanFeatures, {self.model.name} embedding, {self.num_features} features"
