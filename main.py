@@ -41,6 +41,7 @@ Methods
     compute_features: Direct access to processing pipeline
     compute_features_from_generator: Sample generator model
     compute_features_from_dataset: Get sample from dataloader
+    save: Save computed feature tensor to path
     set_log_level: Set level of logging output
 """
 class CleanFeatures:
