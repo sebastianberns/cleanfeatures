@@ -239,9 +239,11 @@ class CleanFeatures:
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
 
-    def save(self, path="./"):
-        save_path = self._get_path(path)
-        save_path.mkdir(exist_ok=True)  # Create save directory
+    def save(self, path="./", name="features"):
+        dir = self._get_path(path)
+        dir.mkdir(exist_ok=True)  # Create save directory
+        save_path = dir/f"{name}.pt"
+
         torch.save(self.features, save_path)
         logging.info(f"Features saved to '{save_path}'")
 
