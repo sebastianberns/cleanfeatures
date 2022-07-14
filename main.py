@@ -54,7 +54,7 @@ class CleanFeatures:
         log (str): Log level
         kwargs (dict): Additional parameters for embedding model
     """
-    def __init__(self, model_path='./models', model='InceptionV3W',
+    def __init__(self, model='InceptionV3W', model_path='./models',
                  device=None, log='warning', **kwargs):
 
         # Check if model is implemented
@@ -185,7 +185,7 @@ class CleanFeatures:
     """
     def compute_features_from_generator(self, generator, z_dim=512,
                                         num_samples=50_000, batch_size=128):
-        logging.info(f"Computing features for {num_samples} samples from generator")
+        logging.info(f"Computing features for {num_samples:,} samples from generator")
         generator.eval()
         features = torch.zeros((num_samples, self.num_features),
                                device=self.device)
@@ -219,7 +219,7 @@ class CleanFeatures:
     """
     def compute_features_from_dataset(self, dataloader, num_samples=50_000,
                                       batch_size=128):
-        logging.info(f"Computing features for {num_samples} samples from data set")
+        logging.info(f"Computing features for {num_samples:,} samples from data set")
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
                                device=self.device)
