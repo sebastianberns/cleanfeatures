@@ -33,6 +33,7 @@ CleanFeatures class
 Attributes
     model (torch.nn.Module): Embedding model
     num_features (int): Number of dimensions of feature output
+    features (None, tensor): Computed features of shape [B, F]
 
 Methods
     augment_dimensions: Standardize input shape to [B, 3, W, H]
@@ -76,7 +77,13 @@ class CleanFeatures:
                                width=self.model.input_width,
                                height=self.model.input_height)
 
+        self._features = None
+
         logging.info('CleanFeatures ready.')
+
+    @property
+    def features(self):
+        return self._features
 
     """
     Redirect calls based on input data type
@@ -148,8 +155,7 @@ class CleanFeatures:
             [C, W, H]: single image
             [W, H]: individual channel
 
-    Returns a tensor of features [B, F] in range (-1, +1),
-    where F is the number of features
+    Returns a tensor of features [B, F], where F is the number of features
     """
     def compute_features(self, input):
         logging.info("Resizing ...")
