@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Callable, Union
 
 import torch
 from torch import Tensor
@@ -17,9 +17,10 @@ class CleanFeaturesDataset(Dataset[Tensor]):
     """
     features: Tensor
 
-    def __init__(self, path: Union[str, Path]) -> None:
+    def __init__(self, path: Union[str, Path], device: Union[torch.device,
+                 str, bytes, dict, Callable]) -> None:
         path = Path(path).expanduser().resolve()
-        self.features = torch.load(path)
+        self.features = torch.load(path, map_location=device)
 
     def __getitem__(self, index):
         return self.features[index]
