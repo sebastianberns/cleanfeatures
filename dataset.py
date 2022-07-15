@@ -18,7 +18,7 @@ class CleanFeaturesDataset(Dataset[Tensor]):
     features: Tensor
 
     def __init__(self, path: Union[str, Path], device: Union[torch.device,
-                 str, bytes, dict, Callable]) -> None:
+                 str, bytes, dict, Callable]=None) -> None:
         path = Path(path).expanduser().resolve()
         self.features = torch.load(path, map_location=device)
 
