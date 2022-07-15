@@ -22,8 +22,8 @@ class CleanFeaturesDataset(Dataset[Tensor]):
         path = Path(path).expanduser().resolve()
         self.features = torch.load(path, map_location=device)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Tensor:
         return self.features[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.features.size(0)
