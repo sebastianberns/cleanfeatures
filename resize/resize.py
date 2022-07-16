@@ -64,13 +64,38 @@ class Resizer:
     def image_resize(self, image):
         device = image.device
         channels = image.shape[0]
-        assert channels == self.channels
 
-        resized_image = torch.zeros((self.channels, self.width, self.height),
+        resized_image = torch.zeros((channels, self.width, self.height),
                                     dtype=torch.float32, device=device)
         for idx in range(channels):
             resized_image[idx] = self.channel_resize(image[idx, :, :])
+
+        resized_image = self._augment_channels(resized_image)
         return resized_image
+
+    """
+    Augment number of channels to meet the image requirements
+    Helper function for image_resize()
+
+        input (Tensor): image of variable number of channels [X, W, H]
+
+    Returns an image with augmented channels [C, W, H]
+    """
+    def _augment_channels(self, image):
+        channels = image.shape[0]
+
+        if channels < self.channels:
+            if channels == 1:  # Grayscale image
+                # Increase channel dimension with same data (just view, no copy)
+                image = image.expand(self.channels, -1, -1)
+                # logging.info(f"Expanded channel dimensions from {channels} "
+                #              f"to {self.channels}")
+            else:
+                raise NotImplementedError(f"Currently no strategy to augment "
+                                          f"images of {channels} channels to "
+                                          f"{self.channels} channels")
+
+        return image
 
     """
     Resize a single channel image

@@ -36,7 +36,6 @@ Attributes
     features (None, tensor): Computed features of shape [B, F]
 
 Methods
-    augment_dimensions: Standardize input shape to [B, 3, W, H]
     self: Compute features from any type of input
     compute_features: Direct access to processing pipeline
     compute_features_from_generator: Sample generator model
@@ -127,8 +126,7 @@ class CleanFeatures:
 
     Returns a tensor of the input data [B, 3, W, H]
     """
-    def augment_dimensions(self, input):
-        channels = self.model.input_channels
+    def _augment_dimensions(self, input):
         dims = len(input.shape)
 
         # Adjust number of dimensions
@@ -138,14 +136,8 @@ class CleanFeatures:
         if dims == 3:  # [C, W, H]
             input.unsqueeze_(0)  # Add batch dimension
             logging.info("Added batch dimension")
+
         # Now all input is standardized to [B, C, W, H]
-        B, C, W, H = input.shape
-
-        if C < channels:  # Grayscale image
-            # Increase channel dimension with same data (just view, no copy)
-            input = input.expand(-1, channels, -1, -1)
-            logging.info(f"Expanded channel dimensions to {channels}")
-
         return input
 
     """
@@ -163,7 +155,7 @@ class CleanFeatures:
         input = self.resizer(input)  # Clean resize
 
         logging.info("Adjusting number of dimensions ...")
-        input = self.augment_dimensions(input)  # Adjust input dimensions
+        input = self._augment_dimensions(input)  # Adjust input dimensions
 
         logging.info("Model forward pass ...")
         features = self._model_fwd(input)  # Embed model forward pass
@@ -199,6 +191,7 @@ class CleanFeatures:
                 samples = generator(z)  # Generate images
 
             samples = self.resizer.batch_resize(samples)  # Clean resize
+            samples = self._augment_dimensions(samples)  # Adjust input dimensions
             features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
@@ -232,6 +225,7 @@ class CleanFeatures:
             samples = samples[:b].to(self.device)  # Limit and convert
 
             samples = self.resizer.batch_resize(samples)  # Clean resize
+            samples = self._augment_dimensions(samples)  # Adjust input dimensions
             features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
