@@ -53,7 +53,7 @@ class CleanFeatures:
         log (str): Log level
         kwargs (dict): Additional parameters for embedding model
     """
-    def __init__(self, model='InceptionV3W', model_path='./models',
+    def __init__(self, model='InceptionV3', model_path='./models',
                  device=None, log='warning', **kwargs):
 
         # Check if model is implemented
@@ -68,7 +68,7 @@ class CleanFeatures:
         self.set_log_level(log)
 
         logging.info('Loading model')
-        model_fn = getattr(models, model)  # Get executable from string
+        model_fn = getattr(models, model)  # Get callable from string
         self.model = model_fn(model_path, self.device, **kwargs)
         self.num_features = self.model.num_features
 
