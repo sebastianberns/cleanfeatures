@@ -115,10 +115,9 @@ class CLIP(Module):
     """
     Get the inception features without resizing
 
-        x (Pytorch tensor [B, C, W, H]): Image with values in range (0, 255)
+        x (tensor [B, C, W, H]): Image with values in range (0, 255)
 
-    Returns a Pytorch tensor [B, F] in range (-1, +1),
-    where F is the number of features
+    Returns a tensor of feature embeddings [B, 768]
     """
     def forward(self, x):
         input = self.normalization(x)
