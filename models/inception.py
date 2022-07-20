@@ -32,12 +32,14 @@ class InceptionV3(nn.Module):
         # https://github.com/pytorch/vision/blob/main/torchvision/models/inception.py#L432
 
         weights = Inception_V3_Weights.IMAGENET1K_V1  # Model checkpoint config
-        weights.transforms = None  # No image resize or crop
+        weights.transforms = None  # No pre-processing image resize or crop
 
         # Initialize model instance
-        self.base = Inception3(transform_input=False,  # No input normalization
-            aux_logits=True, init_weights=False,
-            num_classes=len(weights.meta["categories"])).eval()
+        # When loading weights ported from TF, inputs need to be transformed
+        # https://github.com/pytorch/vision/issues/4136#issuecomment-871290495
+        self.base = Inception3(transform_input=True, aux_logits=True,
+            init_weights=False, num_classes=len(weights.meta["categories"])
+        ).eval()
 
         # Load pre-trained model checkpoint
         checkpoint = load_state_dict_from_url(weights.url, model_dir=path,
@@ -53,7 +55,7 @@ class InceptionV3(nn.Module):
     """
     Get the inception features without resizing
 
-        x (tensor [B, C, W, H]): Image with values in range (0, 255)
+        input (tensor [B, C, W, H]): batch of image tensors
 
     Returns a tensor of feature embeddings [B, 2048] of feature embeddings
     """
@@ -63,10 +65,5 @@ class InceptionV3(nn.Module):
         # Make sure input matches expected dimensions
         assert (W == self.input_width) and (H == self.input_height)
 
-        # Normalization
-        # Change value range from (0, 255) to (-1, +1)
-        input = input - 128.  # Center around zero
-        input = input / 128.  # Scale to (-1, +1)
-
-        out = self.embedding(input)  # Forwar
+        out = self.embedding(input)  # Forward pass
         return out['features']
