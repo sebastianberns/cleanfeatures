@@ -13,15 +13,13 @@ This is a custom implementation that builds on the best practices and partially 
 
 ### Dependencies
 
-- Pytorch \*
+- Pytorch
 - numpy
 - requests
 - Pillow (PIL)
 - CLIP ([github.com/openai/CLIP](https://github.com/openai/CLIP))
 - ftfy
 - regex
-
-\* This repository does not work with Pytorch version 1.9 because of some issues with the torchscript Inception model.
 
 ### CLIP repository
 
@@ -48,12 +46,12 @@ features = cf(images)  # 3.
 CleanFeatures(model_path='./models', device=None, log='warning', **kwargs)
 ```
 
-- ```model_path``` (str or Path object): path to directory where model checkpoint is saved or should be saved to. Optional, default: './models'.
-- ```model``` (str): choice of pre-trained feature extraction model. Options:
-  - InceptionV3W (default)
+- ```model_path``` (str or Path object, optional): path to directory where model checkpoint is saved or should be saved to. Default: './models'.
+- ```model``` (str, optional): choice of pre-trained feature extraction model. Options:
+  - InceptionV3 (default)
   - CLIP
-- ```device``` (str or torch.device): device which the loaded model will be allocated to. Optional, default: 'cuda' if a GPU is available, otherwise 'cpu'.
-- ```log``` (str): logging level, where any option will include all lower logging levels. Options:
+- ```device``` (str or torch.device, optional): device which the loaded model will be allocated to. Default: 'cuda' if a GPU is available, otherwise 'cpu'.
+- ```log``` (str, optional): logging level, where any option will include all lower logging levels. Options:
   - all
   - debug
   - info
@@ -64,7 +62,7 @@ CleanFeatures(model_path='./models', device=None, log='warning', **kwargs)
 
 #### CLIP arguments
 
-- ```clip_model``` (str): choice of pre-trained CLIP model. Options:
+- ```clip_model``` (str, optional): choice of pre-trained CLIP model. Options:
   - RN50
   - RN101
   - RN50x4
@@ -79,7 +77,7 @@ CleanFeatures(model_path='./models', device=None, log='warning', **kwargs)
 
 The class provides three methods to process different types of input: a data tensor, a generator network, or a dataloader.
 
-All methods return a tensor of features [B, F] in range (-1, +1), where F is the number of features.
+All methods return a tensor of embedded features [B, F], where F is the number of features.
 
 #### compute_features
 
@@ -122,4 +120,4 @@ cf.compute_features_from_dataset(dataloader, num_samples=50_000, batch_size=128)
 
 ## References
 
-Parmar, G., Zhang, R., & Zhu, J.-Y. (2022). On Aliased Resizing and Surprising Subtleties in GAN Evaluation. [*arXiv preprint arXiv:2104.11222*](http://arxiv.org/abs/2104.11222).
+Parmar, G., Zhang, R., & Zhu, J.-Y. (2022). On Aliased Resizing and Surprising Subtleties in GAN Evaluation. [*Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition*, 11410–11420.]( https://openaccess.thecvf.com/content/CVPR2022/html/Parmar_On_Aliased_Resizing_and_Surprising_Subtleties_in_GAN_Evaluation_CVPR_2022_paper.html)
