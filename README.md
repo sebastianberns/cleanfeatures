@@ -13,17 +13,14 @@ This is a custom implementation that builds on the best practices and partially 
 
 ### Dependencies
 
-- Pytorch
+- torch and torchvision (Pytorch)
 - numpy
 - requests
-- Pillow (PIL)
-- CLIP ([github.com/openai/CLIP](https://github.com/openai/CLIP))
-- ftfy
-- regex
-
-### CLIP repository
-
-Copy the ```clip``` code directory ([github.com/openai/CLIP/tree/main/clip](https://github.com/openai/CLIP/tree/main/clip)) into the ```models``` directory.
+- PIL (Pillow)
+- clip ([openai/CLIP](https://github.com/openai/CLIP))
+  - ftfy
+  - regex
+  - tqdm
 
 ## Usage
 

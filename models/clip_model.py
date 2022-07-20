@@ -1,11 +1,10 @@
 import logging
 from pathlib import Path
 
+import clip
 import torch
 from torch.nn import Module
 from torchvision.transforms import Normalize
-
-from . import clip
 
 
 _MODELS = {
