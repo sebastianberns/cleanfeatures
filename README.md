@@ -1,13 +1,12 @@
 # Clean Features
 
-Compute ‘clean’ high-level features for a batch of images with a pre-trained model.
+Compute ‘clean’ high-level features for a batch of images with a pre-trained embedding model.
+This is a custom implementation of best practices recommended by [Parmar et al. (2022)](https://openaccess.thecvf.com/content/CVPR2022/html/Parmar_On_Aliased_Resizing_and_Surprising_Subtleties_in_GAN_Evaluation_CVPR_2022_paper.html) and partially builds on code from [GaParmar/clean-fid](https://github.com/GaParmar/clean-fid).
 
-Currently available models:
+Currently available feature embedding models:
 
 - Inception v3
 - CLIP
-
-This is a custom implementation that builds on the best practices and partially on the implementation of [GaParmar/clean-fid](https://github.com/GaParmar/clean-fid).
 
 ## Setup
 
