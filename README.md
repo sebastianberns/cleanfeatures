@@ -98,9 +98,9 @@ cf.compute_features_from_generator(generator, z_dim=512, num_samples=50_000,
 ```
 
 - `generator` (Module): Pre-trained generator model.
-- `z_dim` (int): Number of generator input dimensions. Optional, default: 512.
-- `num_samples` (int): Number of samples to generate and process. Optional, default: 50,000.
-- `batch_size` (int): Batch size for generator sampling. Optional, default: 128.
+- `z_dim` (int, optional): Number of generator input dimensions. Default: 512.
+- `num_samples` (int, optional): Number of samples to generate and process. Default: 50,000.
+- `batch_size` (int, optional): Batch size for generator sampling. Default: 128.
 
 #### compute_features_from_dataset
 
@@ -111,8 +111,30 @@ cf.compute_features_from_dataset(dataloader, num_samples=50_000, batch_size=128)
 ```
 
 - `dataloader` (DataLoader): Instance of Pytorch data loader.
-- `num_samples` (int): Number of samples to process. Optional, default: 50,000.
-- `batch_size` (int): Batch size for sampling. Optional, default: 128.
+- `num_samples` (int, optional): Number of samples to process. Default: 50,000.
+- `batch_size` (int, optional): Batch size for sampling. Default: 128.
+
+#### save
+
+Save computed features to file.
+
+```python
+cf.save(path="./save", name="features")
+```
+In the above example, the features will be stored as `./save/features.pt`.
+
+- `path` (str or Path, optional): path to save directory. Default: './'
+- `name` (str, optional): filename without file extension. Default: 'features'
+
+### Attributes
+
+#### features
+
+Returns the computed feature tensor if available, `None` otherwise.
+
+```python
+features = cf.features
+```
 
 ## References
 
