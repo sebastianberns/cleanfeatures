@@ -36,29 +36,29 @@ features = cf(images)  # 3.
 2. Create a new instance, optionally providing a directory path. This can be either the place the model checkpoint is already saved, or the place it should be downloaded and saved to.
 3. Pass a batch of images to compute the corresponding 'clean' features
 
-### CleanFeatures class arguments
+### CleanFeatures class
 
 ```python
-CleanFeatures(model_path='./models', device=None, log='warning', **kwargs)
+cf = CleanFeatures(model_path='./models', device=None, log='warning', **kwargs)
 ```
 
-- ```model_path``` (str or Path object, optional): path to directory where model checkpoint is saved or should be saved to. Default: './models'.
-- ```model``` (str, optional): choice of pre-trained feature extraction model. Options:
+- `model_path` (str or Path object, optional): path to directory where model checkpoint is saved or should be saved to. Default: './models'.
+- `model` (str, optional): choice of pre-trained feature extraction model. Options:
   - InceptionV3 (default)
   - CLIP
-- ```device``` (str or torch.device, optional): device which the loaded model will be allocated to. Default: 'cuda' if a GPU is available, otherwise 'cpu'.
-- ```log``` (str, optional): logging level, where any option will include all lower logging levels. Options:
+- `device` (str or torch.device, optional): device which the loaded model will be allocated to. Default: 'cuda' if a GPU is available, otherwise 'cpu'.
+- `log` (str, optional): logging level, where any option will include all lower logging levels. Options:
   - all
   - debug
   - info
   - warning (default)
   - error
   - critical
-- ```kwargs``` (dict): optional model-specific arguments. See below.
+- `kwargs` (dict): optional model-specific arguments. See below.
 
-#### CLIP arguments
+#### CLIP model-specific arguments
 
-- ```clip_model``` (str, optional): choice of pre-trained CLIP model. Options:
+- `clip_model` (str, optional): choice of pre-trained CLIP model. Options:
   - RN50
   - RN101
   - RN50x4
@@ -116,25 +116,47 @@ cf.compute_features_from_dataset(dataloader, num_samples=50_000, batch_size=128)
 
 #### save
 
-Save computed features to file.
+Save the last computed features to file.
 
 ```python
 cf.save(path="./save", name="features")
 ```
 In the above example, the features will be stored as `./save/features.pt`.
 
-- `path` (str or Path, optional): path to save directory. Default: './'
-- `name` (str, optional): filename without file extension. Default: 'features'
+- `path` (str or Path, optional): path to save directory. Default: './'.
+- `name` (str, optional): filename without file extension. Default: 'features'.
 
 ### Attributes
 
 #### features
 
-Returns the computed feature tensor if available, `None` otherwise.
+Returns the last computed feature tensor if available, `None` otherwise.
 
 ```python
 features = cf.features
 ```
+
+### CleanFeaturesDataset class
+
+Extends Pytorch Dataset class
+
+1. with length
+2. and indexing methods
+3. for use with a data loader
+
+```python
+from cleanfeatures import CleanFeaturesDataset
+from torch.utils.data import DataLoader
+
+dataset = CleanFeaturesDataset(path, device=None)
+num_samples = len(dataset)  # 1.
+feature = dataset[0]  # 2.
+
+dataloader = DataLoader(dataset, batch_size=128, num_workers=8)  # 3.
+```
+
+- `model_path` (str or Path object): path to feature tensor file.
+- `device` (str or torch.device, optional): device which the loaded data set will be allocated to. Default: 'None', file will be loaded onto the same device it was saved from.
 
 ## References
 
