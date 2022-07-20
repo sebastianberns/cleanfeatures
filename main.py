@@ -100,7 +100,7 @@ class CleanFeatures:
         elif isinstance(input, torch.utils.data.DataLoader):  # Data set
             return self.compute_features_from_dataset(input, *kwargs)
         else:
-            raise ValueError(f"Input with {dims} dimensions is not supported")
+            raise ValueError(f"Input type {type(input)} is not supported")
 
     """
     Direct call to CleanFeatures instance
