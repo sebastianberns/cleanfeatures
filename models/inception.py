@@ -14,9 +14,10 @@ class InceptionV3(nn.Module):
         path (str): locally saved model checkpoint
         device (str or device, optional): which device to load the model checkpoint onto
         progress (bool, optional): display download progress bar. Default: True
-        inception_layer (str, optional): name of layer for feature extraction. Default: 'flatten'
+        inception_layer (tuple[str, int], optional): tuple of name of layer for feature
+            extraction and expected number of features. Default: ('avgpool', 2048)
     """
-    def __init__(self, path='./models', device=None, progress=True, inception_layer='flatten'):
+    def __init__(self, path='./models', device=None, progress=True, inception_layer=('avgpool', 2048)):
         super().__init__()
 
         path = Path(path)  # Make sure this is a Path object
@@ -25,7 +26,8 @@ class InceptionV3(nn.Module):
         self.input_channels = 3
         self.input_width = 299
         self.input_height = 299
-        self.num_features = 2048
+
+        self.layer, self.num_features = inception_layer
 
         self.device = device
 
@@ -48,7 +50,7 @@ class InceptionV3(nn.Module):
         self.base.load_state_dict(checkpoint)
 
         # Create feature extractor
-        return_nodes = {inception_layer: 'features'}  # Define intermediate node output
+        return_nodes = {self.layer: 'features'}  # Define intermediate node output
         self.embedding = create_feature_extractor(self.base,
             return_nodes=return_nodes, suppress_diff_warning=True)
 
@@ -66,7 +68,8 @@ class InceptionV3(nn.Module):
         assert (W == self.input_width) and (H == self.input_height)
 
         out = self.embedding(input)  # Forward pass, integrated normalization
-        return out['features']
+        features = torch.flatten(out['features'], 1)  # Flatten, keep batch dim
+        return features
 
 
     """
