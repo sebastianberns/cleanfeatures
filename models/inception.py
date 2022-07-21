@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torchvision._internally_replaced_utils import load_state_dict_from_url
 from torchvision.models import Inception3, Inception_V3_Weights
-from torchvision.models.feature_extraction import create_feature_extractor
+from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
 
 
 class InceptionV3(nn.Module):
@@ -54,17 +54,25 @@ class InceptionV3(nn.Module):
 
 
     """
-    Get the inception features without resizing
+    Compute inception features
 
         input (tensor [B, C, W, H]): batch of image tensors
 
-    Returns a tensor of feature embeddings [B, 2048] of feature embeddings
+    Returns a tensor of feature embeddings [B, 2048]
     """
     def forward(self, input):
-        B, C, W, H = input.shape  # Batch size, channels, width, height
-
         # Make sure input matches expected dimensions
+        B, C, W, H = input.shape  # Batch size, channels, width, height
         assert (W == self.input_width) and (H == self.input_height)
 
-        out = self.embedding(input)  # Forward pass
+        out = self.embedding(input)  # Forward pass, integrated normalization
         return out['features']
+
+
+    """
+    Returns a list of layers that can be used for feature extraction
+    """
+    def get_layers(self):
+        train_nodes, eval_nodes = get_graph_node_names(self.base,
+            suppress_diff_warning=True)
+        return eval_nodes

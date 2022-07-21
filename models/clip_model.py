@@ -114,13 +114,17 @@ class CLIP(nn.Module):
 
 
     """
-    Get the inception features without resizing
+    Compute clip image embeddings
 
-        x (tensor [B, C, W, H]): Image with values in range (0, 255)
+        input (tensor [B, C, W, H]): batch of image tensors
 
     Returns a tensor of feature embeddings [B, 768]
     """
-    def forward(self, x):
-        input = self.normalization(x)
+    def forward(self, input):
+        # Make sure input matches expected dimensions
+        B, C, W, H = input.shape  # Batch size, channels, width, height
+        assert (W == self.input_width) and (H == self.input_height)
+        
+        input = self.normalization(input)
         features = self.base.encode_image(input)
         return features
