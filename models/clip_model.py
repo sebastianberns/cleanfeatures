@@ -3,7 +3,7 @@ from pathlib import Path
 
 import clip
 import torch
-from torch.nn import Module
+from torch import nn
 from torchvision.transforms import Normalize
 
 
@@ -68,15 +68,17 @@ _MODELS = {
 }
 
 
-class CLIP(Module):
+class CLIP(nn.Module):
     """
     Wrapper around Inception V3 torchscript model provided here
     https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt
 
-        path (str): locally saved inception model snapshot
+        path (str): locally saved model checkpoint
+        device (str or device, optional): which device to load the model checkpoint onto
+        clip_model (str, optional): name of clip model variant. Default: 'ViT-L/14'
     """
     def __init__(self, path='./models', device=None, clip_model='ViT-L/14'):
-        super(CLIP, self).__init__()
+        super().__init__()
 
         path = Path(path)  # Make sure this is a Path object
 

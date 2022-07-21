@@ -69,7 +69,7 @@ class CleanFeatures:
 
         logging.info('Loading model')
         model_fn = getattr(models, model)  # Get callable from string
-        self.model = model_fn(model_path, self.device, **kwargs)
+        self.model = model_fn(path=model_path, device=self.device, **kwargs)
         self.num_features = self.model.num_features
 
         logging.info('Building resizer')

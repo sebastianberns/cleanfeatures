@@ -11,11 +11,12 @@ class InceptionV3(nn.Module):
     """
     Wrapper around Inception V3 torchvision model
 
-        path (str): locally saved inception model snapshot
+        path (str): locally saved model checkpoint
         device (str or device, optional): which device to load the model checkpoint onto
         progress (bool, optional): display download progress bar. Default: True
+        inception_layer (str, optional): name of layer for feature extraction. Default: 'flatten'
     """
-    def __init__(self, path='./models', device=None, progress=True):
+    def __init__(self, path='./models', device=None, progress=True, inception_layer='flatten'):
         super().__init__()
 
         path = Path(path)  # Make sure this is a Path object
@@ -47,7 +48,7 @@ class InceptionV3(nn.Module):
         self.base.load_state_dict(checkpoint)
 
         # Create feature extractor
-        return_nodes = {'flatten': 'features'}  # Define intermediate node output
+        return_nodes = {inception_layer: 'features'}  # Define intermediate node output
         self.embedding = create_feature_extractor(self.base,
             return_nodes=return_nodes, suppress_diff_warning=True)
 
