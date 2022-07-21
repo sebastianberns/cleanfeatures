@@ -7,6 +7,7 @@ Currently available feature embedding models:
 
 - Inception v3
 - CLIP
+- Resnet50
 
 ## Setup
 

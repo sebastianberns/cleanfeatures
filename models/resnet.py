@@ -3,45 +3,43 @@ from pathlib import Path
 import torch
 from torch import nn
 from torchvision._internally_replaced_utils import load_state_dict_from_url
-from torchvision.models import Inception3, Inception_V3_Weights
+from torchvision.models.resnet import Bottleneck, ResNet, ResNet50_Weights
 from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
+from torchvision.transforms import Normalize
 
 
-class InceptionV3(nn.Module):
+class Resnet50(nn.Module):
     """
-    Wrapper around Inception V3 torchvision model
+    Wrapper around Resnet50 torchvision model
 
         path (str): locally saved model checkpoint
         device (str or device, optional): which device to load the model checkpoint onto
         progress (bool, optional): display download progress bar. Default: True
-        inception_layer (tuple[str, int], optional): tuple of name of layer for feature
+        resnet_layer (tuple[str, int], optional): tuple of name of layer for feature
             extraction and expected number of features. Default: ('avgpool', 2048)
     """
-    def __init__(self, path='./models', device=None, progress=True, inception_layer=('avgpool', 2048)):
+    def __init__(self, path='./models', device=None, progress=True, resnet_layer=('avgpool', 2048)):
         super().__init__()
 
         path = Path(path).expanduser().resolve()
 
-        self.name = "InceptionV3"
+        self.name = "Resnet50"
         self.input_channels = 3
-        self.input_width = 299
-        self.input_height = 299
+        self.input_width = 224
+        self.input_height = 224
 
-        self.layer, self.num_features = inception_layer
+        self.layer, self.num_features = resnet_layer
 
         self.device = device
 
         # Reproducing most of the default behavior
-        # https://github.com/pytorch/vision/blob/main/torchvision/models/inception.py#L432
+        # https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py#L699
 
-        weights = Inception_V3_Weights.IMAGENET1K_V1  # Model checkpoint config
+        weights = ResNet50_Weights.IMAGENET1K_V1  # Model checkpoint config
 
         # Initialize model instance
-        # When loading weights ported from TF, inputs need to be transformed
-        # https://github.com/pytorch/vision/issues/4136#issuecomment-871290495
-        self.base = Inception3(transform_input=True, aux_logits=True,
-            init_weights=False, num_classes=len(weights.meta["categories"])
-        ).eval()
+        self.base = ResNet(Bottleneck, [3, 4, 6, 3],
+            num_classes=len(weights.meta["categories"])).eval()
 
         # Load pre-trained model checkpoint
         checkpoint = load_state_dict_from_url(weights.url, model_dir=path,
@@ -53,9 +51,13 @@ class InceptionV3(nn.Module):
         self.embedding = create_feature_extractor(self.base,
             return_nodes=return_nodes, suppress_diff_warning=True)
 
+        # Imagenet statistics
+        self.normalization = Normalize((0.485, 0.456, 0.406),  # mean
+                                       (0.229, 0.224, 0.225))  # std
+
 
     """
-    Compute inception features
+    Compute resnet features
 
         input (tensor [B, C, W, H]): batch of image tensors
 
@@ -66,7 +68,8 @@ class InceptionV3(nn.Module):
         B, C, W, H = input.shape  # Batch size, channels, width, height
         assert (W == self.input_width) and (H == self.input_height)
 
-        out = self.embedding(input)  # Forward pass, integrated normalization
+        input = self.normalization(input)
+        out = self.embedding(input)  # Forward pass
         features = torch.flatten(out['features'], 1)  # Flatten, keep batch dim
         return features
 
