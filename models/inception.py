@@ -5,6 +5,7 @@ from torch import nn
 from torchvision._internally_replaced_utils import load_state_dict_from_url
 from torchvision.models import Inception3, Inception_V3_Weights
 from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
+from torchvision.transforms import Normalize
 
 
 class InceptionV3(nn.Module):
@@ -53,6 +54,10 @@ class InceptionV3(nn.Module):
         self.embedding = create_feature_extractor(self.base,
             return_nodes=return_nodes, suppress_diff_warning=True)
 
+        # Imagenet statistics
+        self.normalization = Normalize((0.485, 0.456, 0.406),  # mean
+                                       (0.229, 0.224, 0.225))  # std
+
 
     """
     Compute inception features
@@ -66,6 +71,7 @@ class InceptionV3(nn.Module):
         B, C, W, H = input.shape  # Batch size, channels, width, height
         assert (W == self.input_width) and (H == self.input_height)
 
+        input = self.normalization(input)
         out = self.embedding(input)  # Forward pass, integrated normalization
         features = torch.flatten(out['features'], 1)  # Flatten, keep batch dim
         return features
