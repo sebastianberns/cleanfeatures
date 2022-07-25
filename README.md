@@ -5,7 +5,7 @@ This is a custom implementation of best practices recommended by [Parmar et al. 
 
 Currently available feature embedding models:
 
-- Inception v3
+- InceptionV3
 - CLIP
 - Resnet50
 
@@ -40,13 +40,14 @@ features = cf(images)  # 3.
 ### CleanFeatures class
 
 ```python
-cf = CleanFeatures(model_path='./models', device=None, log='warning', **kwargs)
+cf = CleanFeatures(model_path='./models', model='InceptionV3', device=None, log='warning', **kwargs)
 ```
 
 - `model_path` (str or Path object, optional): path to directory where model checkpoint is saved or should be saved to. Default: './models'.
 - `model` (str, optional): choice of pre-trained feature extraction model. Options:
-  - InceptionV3 (default)
   - CLIP
+  - InceptionV3 (default)
+  - Resnet50
 - `device` (str or torch.device, optional): device which the loaded model will be allocated to. Default: 'cuda' if a GPU is available, otherwise 'cpu'.
 - `log` (str, optional): logging level, where any option will include all lower logging levels. Options:
   - all
