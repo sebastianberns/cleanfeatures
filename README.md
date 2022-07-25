@@ -40,7 +40,8 @@ features = cf(images)  # 3.
 ### CleanFeatures class
 
 ```python
-cf = CleanFeatures(model_path='./models', model='InceptionV3', device=None, log='warning', **kwargs)
+cf = CleanFeatures(model_path='./models', model='InceptionV3', device=None,
+                   log='warning', **kwargs)
 ```
 
 - `model_path` (str or Path object, optional): path to directory where model checkpoint is saved or should be saved to. Default: './models'.
