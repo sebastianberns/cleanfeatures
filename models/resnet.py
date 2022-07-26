@@ -3,9 +3,13 @@ from pathlib import Path
 import torch
 from torch import nn
 from torch.hub import load_state_dict_from_url
-from torchvision.models.resnet import Bottleneck, ResNet, ResNet50_Weights
+from torchvision.models.resnet import Bottleneck, ResNet
 from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
 from torchvision.transforms import Normalize
+
+
+# https://github.com/pytorch/vision/blob/v0.13.0/torchvision/models/resnet.py#L354
+model_url = "https://download.pytorch.org/models/resnet50-0676ba61.pth"
 
 
 class Resnet50(nn.Module):
@@ -35,15 +39,12 @@ class Resnet50(nn.Module):
         # Reproducing most of the default behavior
         # https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py#L699
 
-        weights = ResNet50_Weights.IMAGENET1K_V1  # Model checkpoint config
-
         # Initialize model instance
-        self.base = ResNet(Bottleneck, [3, 4, 6, 3],
-            num_classes=len(weights.meta["categories"]))
+        self.base = ResNet(Bottleneck, [3, 4, 6, 3], num_classes=1000)
         self.base.to(device)
 
         # Load pre-trained model checkpoint
-        checkpoint = load_state_dict_from_url(weights.url, model_dir=path,
+        checkpoint = load_state_dict_from_url(model_url, model_dir=path,
             map_location=device, progress=progress)
         self.base.load_state_dict(checkpoint)
         self.base.eval()

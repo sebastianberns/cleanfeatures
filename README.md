@@ -13,7 +13,8 @@ Currently available feature embedding models:
 
 ### Dependencies
 
-- torch and torchvision (Pytorch)
+- torch (Pytorch)
+- torchvision >= 0.11.0 (requires `torchvision.models.feature_extraction`)
 - numpy
 - requests
 - PIL (Pillow)

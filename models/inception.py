@@ -3,9 +3,13 @@ from pathlib import Path
 import torch
 from torch import nn
 from torch.hub import load_state_dict_from_url
-from torchvision.models import Inception3, Inception_V3_Weights
+from torchvision.models.inception import Inception3
 from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
 from torchvision.transforms import Normalize
+
+
+# https://github.com/pytorch/vision/blob/v0.13.0/torchvision/models/inception.py#L412
+model_url = "https://download.pytorch.org/models/inception_v3_google-0cc3c7bd.pth"
 
 
 class InceptionV3(nn.Module):
@@ -35,17 +39,15 @@ class InceptionV3(nn.Module):
         # Reproducing most of the default behavior
         # https://github.com/pytorch/vision/blob/main/torchvision/models/inception.py#L432
 
-        weights = Inception_V3_Weights.IMAGENET1K_V1  # Model checkpoint config
-
         # Initialize model instance
         # When loading weights ported from TF, inputs need to be transformed
         # https://github.com/pytorch/vision/issues/4136#issuecomment-871290495
         self.base = Inception3(transform_input=True, aux_logits=True,
-            init_weights=False, num_classes=len(weights.meta["categories"]))
+            init_weights=False, num_classes=1000)
         self.base.to(device)
 
         # Load pre-trained model checkpoint
-        checkpoint = load_state_dict_from_url(weights.url, model_dir=path,
+        checkpoint = load_state_dict_from_url(model_url, model_dir=path,
             map_location=device, progress=progress)
         self.base.load_state_dict(checkpoint)
         self.base.eval()
