@@ -2,7 +2,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
-from torchvision._internally_replaced_utils import load_state_dict_from_url
+from torch.hub import load_state_dict_from_url
 from torchvision.models.resnet import Bottleneck, ResNet, ResNet50_Weights
 from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
 from torchvision.transforms import Normalize
@@ -39,12 +39,14 @@ class Resnet50(nn.Module):
 
         # Initialize model instance
         self.base = ResNet(Bottleneck, [3, 4, 6, 3],
-            num_classes=len(weights.meta["categories"])).eval()
+            num_classes=len(weights.meta["categories"]))
+        self.base.to(device)
 
         # Load pre-trained model checkpoint
         checkpoint = load_state_dict_from_url(weights.url, model_dir=path,
             map_location=device, progress=progress)
         self.base.load_state_dict(checkpoint)
+        self.base.eval()
 
         # Create feature extractor
         return_nodes = {self.layer: 'features'}  # Define intermediate node output

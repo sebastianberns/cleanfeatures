@@ -2,7 +2,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
-from torchvision._internally_replaced_utils import load_state_dict_from_url
+from torch.hub import load_state_dict_from_url
 from torchvision.models import Inception3, Inception_V3_Weights
 from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
 from torchvision.transforms import Normalize
@@ -41,13 +41,14 @@ class InceptionV3(nn.Module):
         # When loading weights ported from TF, inputs need to be transformed
         # https://github.com/pytorch/vision/issues/4136#issuecomment-871290495
         self.base = Inception3(transform_input=True, aux_logits=True,
-            init_weights=False, num_classes=len(weights.meta["categories"])
-        ).eval()
+            init_weights=False, num_classes=len(weights.meta["categories"]))
+        self.base.to(device)
 
         # Load pre-trained model checkpoint
         checkpoint = load_state_dict_from_url(weights.url, model_dir=path,
             map_location=device, progress=progress)
         self.base.load_state_dict(checkpoint)
+        self.base.eval()
 
         # Create feature extractor
         return_nodes = {self.layer: 'features'}  # Define intermediate node output
