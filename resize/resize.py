@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 from PIL import Image
 import torch
@@ -90,8 +88,6 @@ class Resizer:
             if channels == 1:  # Grayscale image
                 # Increase channel dimension with same data (just view, no copy)
                 image = image.expand(self.channels, -1, -1)
-                logging.info(f"Expanded channel dimensions from {channels} "
-                             f"to {self.channels}")
             else:
                 raise NotImplementedError(f"Currently no strategy to augment "
                                           f"images of {channels} channels to "
