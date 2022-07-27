@@ -78,12 +78,17 @@ class CleanFeatures:
                                height=self.model.input_height)
 
         self._features = None
+        self._targets = None
 
         logging.info('CleanFeatures ready.')
 
     @property
     def features(self):
         return self._features
+
+    @property
+    def targets(self):
+        return self._targets
 
     """
     Redirect calls based on input data type
@@ -216,31 +221,38 @@ class CleanFeatures:
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
                                device=self.device)
+        targets = []
+
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
             b = min(batch_size, (num_samples - c))  # Get batch size ...
                                 # last batch may need to be smaller
 
-            samples, _ = next(dataiterator)  # Load samples
+            samples, labels = next(dataiterator)  # Load samples and labels
             samples = samples[:b].to(self.device)  # Limit and convert
+            targets.extend(labels[:b])  # Collect target labels
 
             samples = self.resizer.batch_resize(samples)  # Clean resize
             samples = self._augment_dimensions(samples)  # Adjust input dimensions
-            features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
+            features[c:c+b] = self._model_fwd(samples)  # Compute and append
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
 
         self._features = features
+        if len(targets) > 0:
+            self._targets = targets
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
-        return features
+        return features, targets
 
     def save(self, path="./", name="features"):
         dir = self._get_path(path)
         dir.mkdir(exist_ok=True)  # Create save directory
         save_path = dir/f"{name}.pt"
 
-        torch.save(self.features, save_path)
-        logging.info(f"Features saved to '{save_path}'")
+        data = {'features': self.features, 'targets': self.targets}
+        torch.save(data, save_path)
+        
+        logging.info(f"Features and targets saved to '{save_path}'")
 
     def set_log_level(self, log_level):
         assert log_level in log_levels.keys(), f"Log level {log_level} not available"
