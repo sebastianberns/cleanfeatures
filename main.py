@@ -170,13 +170,13 @@ class CleanFeatures:
         generator (Module): Pre-trained generator model
         z_dim (int): Number of generator input dimensions
         num_samples (int): Number of samples to generate and process
-        batch_size (int): Batch size for generator sampling
+        batch_size (int, optional): Batch size for generator sampling. Default: 128
 
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_generator(self, generator, z_dim=512,
-                                        num_samples=50_000, batch_size=128):
+    def compute_features_from_generator(self, generator, z_dim, num_samples,
+                                        batch_size=128):
         logging.info(f"Computing features for {num_samples:,} samples from generator")
         generator.eval()
         features = torch.zeros((num_samples, self.num_features),
@@ -205,12 +205,12 @@ class CleanFeatures:
 
         dataloader (DataLoader): Instance of Pytorch data loader
         num_samples (int): Number of samples to process
-        batch_size (int): Batch size for sampling
+        batch_size (int, optional): Batch size for sampling. Default: 128
 
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_dataset(self, dataloader, num_samples=50_000,
+    def compute_features_from_dataset(self, dataloader, num_samples,
                                       batch_size=128):
         logging.info(f"Computing features for {num_samples:,} samples from data set")
         dataiterator = iter(dataloader)
