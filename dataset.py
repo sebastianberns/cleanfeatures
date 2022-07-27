@@ -28,8 +28,8 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
         self.targets = data['targets']
 
         assert self.features.size(0) == len(self.targets), (f"Size mismatch "
-            f"between features ({self.features.size(0)}) and "
-            f"targets ({len(self.targets)})")
+            f"between features ({self.features.size(0):,} samples) and "
+            f"targets ({len(self.targets):,} labels)")
 
     def __getitem__(self, index) -> Tuple[Tensor, int]:
         return self.features[index], self.targets[index]
