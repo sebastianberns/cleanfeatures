@@ -142,25 +142,22 @@ features = cf.features
 
 ### CleanFeaturesDataset class
 
-Extends Pytorch Dataset class
-
-1. with length
-2. and indexing methods
-3. for use with a data loader
+Extends Pytorch Dataset class to load a pre-computed features data set.
+Provides length (1.) and indexing methods (2.) for use with a data loader (3.)
 
 ```python
 from cleanfeatures import CleanFeaturesDataset
 from torch.utils.data import DataLoader
 
-dataset = CleanFeaturesDataset(path, device=None)
+dataset = CleanFeaturesDataset(path, map_location=None)
 num_samples = len(dataset)  # 1.
 feature = dataset[0]  # 2.
 
 dataloader = DataLoader(dataset, batch_size=128, num_workers=8)  # 3.
 ```
 
-- `model_path` (str or Path object): path to feature tensor file.
-- `device` (str or torch.device, optional): device which the loaded data set will be allocated to. Default: 'None', file will be loaded onto the same device it was saved from.
+- `path` (str or Path object): path to feature tensor file.
+- `map_location` (str or torch.device, optional): device which the loaded data set will be allocated to. Default: 'None', file will be loaded onto the same device it was saved from.
 
 ## References
 
