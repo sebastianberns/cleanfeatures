@@ -18,6 +18,7 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
     """
     features: Tensor
     targets: List[int]
+    num_features: int
 
     def __init__(self, path: Union[str, Path], map_location: Union[
                  torch.device, str, bytes, dict, Callable]=None) -> None:
@@ -26,6 +27,7 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
         data = torch.load(path, map_location=map_location)
         self.features = data['features']
         self.targets = data['targets']
+        self.num_features = self.features.size(1)
 
         assert self.features.size(0) == len(self.targets), (f"Size mismatch "
             f"between features ({self.features.size(0):,} samples) and "
