@@ -3,16 +3,23 @@ from PIL import Image
 import torch
 
 
+if not hasattr(Image, 'Resampling'):  # Pillow < 9.1
+    # Constants deprecated since version 9.1.0
+    # Replaced by enum.IntEnum class
+    Image.Resampling = Image
+
+
 class Resizer:
     """
     Resizer
         width (int), height (int): dimensions of resized output images
         channels (int): number of channels of input and output images
     """
-    def __init__(self, channels=3, width=299, height=299):
+    def __init__(self, channels=3, width=299, height=299, filter=Image.Resampling.BICUBIC):
         self.channels = channels
         self.width = width
         self.height = height
+        self.filter = filter
 
     """
     Resize a batch, an image or a channel
@@ -106,7 +113,7 @@ class Resizer:
         device = channel.device
         channel_np = channel.cpu().numpy().astype(np.float32)  # Convert to nparray on CPU
         img = Image.fromarray(channel_np, mode='F')  # Create Image from 32-bit floating point pixels
-        img = img.resize((self.width, self.height), resample=Image.BICUBIC)  # Clean resize
+        img = img.resize((self.width, self.height), resample=self.filter)  # Clean resize
         return torch.tensor(np.asarray(img, dtype=np.float32), device=device)
 
     def __repr__(self):
