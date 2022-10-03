@@ -2,6 +2,6 @@
 
 from .dataset import CleanFeaturesDataset
 from .main import CleanFeatures
-from .resize import Resizer
+from .transforms import Resize
 
-__all__ = ['CleanFeatures', 'Resizer', 'CleanFeaturesDataset']
+__all__ = ['CleanFeatures', 'Resize', 'CleanFeaturesDataset']
