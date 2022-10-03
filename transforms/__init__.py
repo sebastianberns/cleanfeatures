@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 
-from .resize import Resizer
+from .transforms import Resize
 
 __all__ = ['Resizer']

@@ -9,17 +9,18 @@ if not hasattr(Image, 'Resampling'):  # Pillow < 9.1
     Image.Resampling = Image
 
 
-class Resizer:
+class Resize:
     """
-    Resizer
+    Resize
         width (int), height (int): dimensions of resized output images
         channels (int): number of channels of input and output images
     """
-    def __init__(self, channels=3, width=299, height=299, filter=Image.Resampling.BICUBIC):
+    def __init__(self, channels=3, width=299, height=299, filter=Image.Resampling.BICUBIC, normalize=True):
         self.channels = channels
         self.width = width
         self.height = height
         self.filter = filter
+        self.normalize = normalize
 
     """
     Resize a batch, an image or a channel
@@ -57,8 +58,8 @@ class Resizer:
 
         resized_batch = torch.zeros((batch_size, self.channels, self.width, self.height),
                                     dtype=torch.float32, device=device)
-        for idx in range(batch_size):
-            resized_batch[idx] = self.image_resize(batch[idx])
+        for i in range(batch_size):
+            resized_batch[i] = self.image_resize(batch[i])
         return resized_batch
 
     """
@@ -71,14 +72,37 @@ class Resizer:
     def image_resize(self, image):
         device = image.device
         channels = image.shape[0]
+        vmin, vmax = image.min(), image.max()  # Original min and max values
 
         resized_image = torch.zeros((channels, self.width, self.height),
                                     dtype=torch.float32, device=device)
-        for idx in range(channels):
-            resized_image[idx] = self.channel_resize(image[idx, :, :])
+        for c in range(channels):
+            resized_image[c] = self.channel_resize(image[c, :, :])
 
+
+        if self.normalize:
+            resized_image = self._normalize_after_resize(resized_image, vmin, vmax)
         resized_image = self._augment_channels(resized_image)
         return resized_image
+
+    """
+    Normalize image values after resize to previous value range
+    Helper function for image_resize()
+
+        x (Tensor): image with values in current range [C, W, H]
+        tmin, tmax (float): min and max values of target range (original image values)
+
+    Returns image tensor normalized to original value range [C, W, H]
+    """
+    def _normalize_after_resize(self, x, tmin, tmax):
+        # vmin, vmax : target min and max values (original)
+        cmin, cmax = x.min(), x.max()  # Current min and max values (resized)
+
+        y = x - cmin           # current values - current min
+        y = y * (tmax - tmin)  # * target range
+        y = y / (cmax - cmin)  # / current range
+        y = y + tmin           # + target min
+        return y
 
     """
     Augment number of channels to meet the image requirements
@@ -117,4 +141,4 @@ class Resizer:
         return torch.tensor(np.asarray(img, dtype=np.float32), device=device)
 
     def __repr__(self):
-        return f"Resizer, {self.channels} x {self.width} x {self.height} [C, W, H]"
+        return f"Resize, {self.channels} x {self.width} x {self.height} [C, W, H]"

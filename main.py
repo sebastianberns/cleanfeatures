@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 
 from . import models
-from .resize import Resizer
+from .transforms import Resize
 
 
 """
@@ -73,9 +73,9 @@ class CleanFeatures:
         self.num_features = self.model.num_features
 
         logging.info('Building resizer')
-        self.resizer = Resizer(channels=self.model.input_channels,
-                               width=self.model.input_width,
-                               height=self.model.input_height)
+        self.resize = Resize(channels=self.model.input_channels,
+                             width=self.model.input_width,
+                             height=self.model.input_height)
 
         self._features = None
         self._targets = None
@@ -157,7 +157,7 @@ class CleanFeatures:
     """
     def compute_features(self, input):
         logging.info("Resizing ...")
-        input = self.resizer(input)  # Clean resize
+        input = self.resize(input)  # Clean resize
 
         logging.info("Adjusting number of dimensions ...")
         input = self._augment_dimensions(input)  # Adjust input dimensions
@@ -195,7 +195,7 @@ class CleanFeatures:
             with torch.no_grad():
                 samples = generator(z)  # Generate images
 
-            samples = self.resizer.batch_resize(samples)  # Clean resize
+            samples = self.resize.batch_resize(samples)  # Clean resize
             samples = self._augment_dimensions(samples)  # Adjust input dimensions
             features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
             c += b  # Increase counter
@@ -216,7 +216,7 @@ class CleanFeatures:
     where F is the number of features
     """
     def compute_features_from_dataset(self, dataloader, num_samples,
-                                      batch_size=128):
+                                      batch_size=128, resize=False):
         logging.info(f"Computing features for {num_samples:,} samples from data set")
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
@@ -232,7 +232,8 @@ class CleanFeatures:
             samples = samples[:b].to(self.device)  # Limit and convert
             targets.extend(labels[:b])  # Collect target labels
 
-            samples = self.resizer.batch_resize(samples)  # Clean resize
+            if resize:
+                samples = self.resize.batch_resize(samples)  # Clean resize
             samples = self._augment_dimensions(samples)  # Adjust input dimensions
             features[c:c+b] = self._model_fwd(samples)  # Compute and append
             c += b  # Increase counter
@@ -251,7 +252,7 @@ class CleanFeatures:
 
         data = {'features': self.features, 'targets': self.targets}
         torch.save(data, save_path)
-        
+
         logging.info(f"Features and targets saved to '{save_path}'")
 
     def set_log_level(self, log_level):
