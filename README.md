@@ -111,12 +111,21 @@ cf.compute_features_from_generator(generator, z_dim=512, num_samples=50_000,
 Will request images from a Pytorch dataloader.
 
 ```python
-cf.compute_features_from_dataset(dataloader, num_samples=50_000, batch_size=128)
+from torchvision.datasets import CIFAR10
+from torchvision.transforms import ToTensor
+
+transform = ToTensor()  # No resize, no normalization, just convert to tensor
+dataset = CIFAR10(root='data', transform=transform)  # Example data set
+
+cf.compute_features_from_dataset(dataset, num_samples=50_000, batch_size=128,
+                                 num_workers=8, shuffle=False)
 ```
 
-- `dataloader` (DataLoader): Instance of Pytorch data loader.
-- `num_samples` (int, optional): Number of samples to process. Default: 50,000.
+- `dataset` (Dataset): Instance of Pytorch data set.
+- `num_samples` (int, optional): Number of samples to process.
 - `batch_size` (int, optional): Batch size for sampling. Default: 128.
+- `num_workers` (int, optional): Number of parallel threads. Best practice is to set to the number of CPU threads available. Default: 0.
+- `shuffle` (bool, optional): Indicates whether samples will be randomly shuffled or not. Default: False.
 
 #### save
 

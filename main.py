@@ -4,6 +4,9 @@ import logging
 from pathlib import Path
 
 import torch
+from torch import nn
+from torch.utils.data import Dataset, DataLoader
+from torchvision.transforms import Compose, ToTensor
 
 from . import models
 from .transforms import Resize
@@ -39,7 +42,7 @@ Methods
     self: Compute features from any type of input
     compute_features: Direct access to processing pipeline
     compute_features_from_generator: Sample generator model
-    compute_features_from_dataset: Get sample from dataloader
+    compute_features_from_dataset: Get sample from dataset
     save: Save computed feature tensor to path
     set_log_level: Set level of logging output
 """
@@ -72,7 +75,7 @@ class CleanFeatures:
         self.model = model_fn(path=model_path, device=self.device, **kwargs)
         self.num_features = self.model.num_features
 
-        logging.info('Building resizer')
+        logging.info('Building resize')
         self.resize = Resize(channels=self.model.input_channels,
                              width=self.model.input_width,
                              height=self.model.input_height)
@@ -80,7 +83,7 @@ class CleanFeatures:
         self._features = None
         self._targets = None
 
-        logging.info('CleanFeatures ready.')
+        logging.info('CleanFeatures ready')
 
     @property
     def features(self):
@@ -95,14 +98,14 @@ class CleanFeatures:
 
         input   Tensor: directly process input
                 Module: sample batch from generator model
-                DataLoader: load batch from data set
+                Dataset: load batch from data set
     """
     def _handle_input(self, input, *kwargs):
         if isinstance(input, torch.Tensor):  # Tensor ready for processing
             return self.compute_features(input)
-        elif isinstance(input, torch.nn.Module):  # Generator model
+        elif isinstance(input, nn.Module):  # Generator model
             return self.compute_features_from_generator(input, *kwargs)
-        elif isinstance(input, torch.utils.data.DataLoader):  # Data set
+        elif isinstance(input, Dataset):  # Data set
             return self.compute_features_from_dataset(input, *kwargs)
         else:
             raise ValueError(f"Input type {type(input)} is not supported")
@@ -207,17 +210,26 @@ class CleanFeatures:
 
     """
     Compute features of samples from data set
+    Assumes data samples are transformed to Tensor in range [0, 1]
 
-        dataloader (DataLoader): Instance of Pytorch data loader
+        dataset (Dataset): Instance of Pytorch data set
         num_samples (int): Number of samples to process
         batch_size (int, optional): Batch size for sampling. Default: 128
+        num_workers (int, optional): Number of parallel threads. Best practice
+            is to set to the number of CPU threads available. Default: 0
+        shuffle (bool, optional): Indicates whether samples will be randomly
+            shuffled or not. Default: False
 
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_dataset(self, dataloader, num_samples,
-                                      batch_size=128, resize=False):
+    def compute_features_from_dataset(self, dataset, num_samples,
+                                      batch_size=128, num_workers=0,
+                                      shuffle=False):
         logging.info(f"Computing features for {num_samples:,} samples from data set")
+
+        dataloader = DataLoader(dataset, batch_size=batch_size,
+                                num_workers=num_workers, shuffle=shuffle)
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
                                device=self.device)
@@ -232,8 +244,7 @@ class CleanFeatures:
             samples = samples[:b].to(self.device)  # Limit and convert
             targets.extend(labels[:b])  # Collect target labels
 
-            if resize:
-                samples = self.resize.batch_resize(samples)  # Clean resize
+            samples = self.resize.batch_resize(samples)  # Clean resize
             samples = self._augment_dimensions(samples)  # Adjust input dimensions
             features[c:c+b] = self._model_fwd(samples)  # Compute and append
             c += b  # Increase counter
