@@ -70,8 +70,7 @@ _MODELS = {
 
 class CLIP(nn.Module):
     """
-    Wrapper around Inception V3 torchscript model provided here
-    https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt
+    CLIP image embedding
 
         path (str): locally saved model checkpoint
         device (str or device, optional): which device to load the model checkpoint onto
@@ -110,7 +109,8 @@ class CLIP(nn.Module):
 
         # CLIP preprocessing normalization
         # https://github.com/openai/CLIP/blob/main/clip/clip.py#L85
-        self.normalization = Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
+        self.normalization = Normalize((0.48145466, 0.4578275, 0.40821073),
+                                       (0.26862954, 0.26130258, 0.27577711))
 
 
     """
@@ -124,7 +124,7 @@ class CLIP(nn.Module):
         # Make sure input matches expected dimensions
         B, C, W, H = input.shape  # Batch size, channels, width, height
         assert (W == self.input_width) and (H == self.input_height)
-        
+
         input = self.normalization(input)
         features = self.base.encode_image(input)
         return features
