@@ -12,8 +12,11 @@ if not hasattr(Image, 'Resampling'):  # Pillow < 9.1
 class Resize:
     """
     Resize
-        width (int), height (int): dimensions of resized output images
         channels (int): number of channels of input and output images
+        width (int), height (int): dimensions of resized output images
+        filter (PIL.Image.Resampling): resampling filters. Default (and recommended): BICUBIC
+        normalize (bool, optional): whether to change the range of values to
+            the original values after resize. Default: True
     """
     def __init__(self, channels=3, width=299, height=299, filter=Image.Resampling.BICUBIC, normalize=True):
         self.channels = channels

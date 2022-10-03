@@ -149,6 +149,29 @@ Returns the last computed feature tensor if available, `None` otherwise.
 features = cf.features
 ```
 
+### Clean Resize transform
+
+Use the Resize class for anti-aliased image resizing in a dataset transform.
+
+```python
+from cleanfeatures import Resize
+from torchvision.datasets import CIFAR10
+from torchvision.transforms import Compose, ToTensor
+
+transform = Compose([
+    ToTensor(),  # No resize, no normalization, just convert to tensor
+    Resize(3, 64, 64)  # Clean resize
+])
+dataset = CIFAR10(root='data', transform=transform)  # Example data set
+```
+
+The Resize class takes the following arguments:
+
+- `channels` (int): number of channels of input and output images. Default: 3
+- `width` and `height` (int): dimensions of resized output images. Default: 299
+- `filter` (PIL.Image.Resampling): resampling filters. Default (and recommended): BICUBIC
+- `normalize` (bool, optional): whether to change the range of values to the original values after resize. Default: True
+
 ### CleanFeaturesDataset class
 
 Extends Pytorch Dataset class to load a pre-computed features data set.
