@@ -60,7 +60,7 @@ class CleanFeatures:
                  device=None, log='warning', **kwargs):
 
         # Check if model is implemented
-        assert hasattr(models, model), f"Model {model} is not available"
+        assert hasattr(models, model), f"Model '{model}' is not available"
 
         model_path = self._get_path(model_path)
 

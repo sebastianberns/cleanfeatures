@@ -5,8 +5,9 @@ This is a custom implementation of best practices recommended by [Parmar et al. 
 
 Currently available feature embedding models:
 
-- InceptionV3
 - CLIP
+- DVAE (DALL-E)
+- InceptionV3
 - Resnet50
 
 ## Setup
@@ -22,6 +23,7 @@ Currently available feature embedding models:
   - ftfy
   - regex
   - tqdm
+- attrs
 
 ## Usage
 
