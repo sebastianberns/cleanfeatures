@@ -34,6 +34,8 @@ class DVAE(nn.Module):
 
         file_path = check_download_url(path, model_url)
         self.encoder = torch.load(file_path, map_location=device)
+        for param in self.encoder.parameters():  # Freeze encoder parameters
+            param.requires_grad = False
 
     def normalization(self, x: torch.Tensor) -> torch.Tensor:
         # map_pixels
