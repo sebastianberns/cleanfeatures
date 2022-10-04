@@ -85,6 +85,7 @@ class CLIP(nn.Module):
 
         self.name = f"CLIP {clip_model}"
         self.input_channels = 3
+        self.dtype = torch.float32
 
         config = _MODELS[clip_model]
         self.url = config['url']

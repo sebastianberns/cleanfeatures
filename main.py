@@ -73,12 +73,13 @@ class CleanFeatures:
         logging.info('Loading model')
         model_fn = getattr(models, model)  # Get callable from string
         self.model = model_fn(path=model_path, device=self.device, **kwargs)
-        self.num_features = self.model.num_features
 
         logging.info('Building resize')
         self.resize = Resize(channels=self.model.input_channels,
                              width=self.model.input_width,
                              height=self.model.input_height)
+        self.num_features = self.model.num_features
+        self.dtype = self.model.dtype
 
         self._features = None
         self._targets = None
@@ -168,6 +169,7 @@ class CleanFeatures:
         logging.info("Model forward pass ...")
         features = self._model_fwd(input)  # Embed model forward pass
 
+        features = features.to(self.dtype)  # Convert to data type
         self._features = features
         logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
         return features
@@ -188,7 +190,7 @@ class CleanFeatures:
         logging.info(f"Computing features for {num_samples:,} samples from generator")
         generator.eval()
         features = torch.zeros((num_samples, self.num_features),
-                               device=self.device)
+                               dtype=self.dtype, device=self.device)
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
             b = min(batch_size, (num_samples - c))  # Get batch size ...
@@ -232,7 +234,7 @@ class CleanFeatures:
                                 num_workers=num_workers, shuffle=shuffle)
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
-                               device=self.device)
+                               dtype=self.dtype, device=self.device)
         targets = []
 
         c = 0  # Counter

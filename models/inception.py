@@ -31,6 +31,7 @@ class InceptionV3(nn.Module):
         self.input_channels = 3
         self.input_width = 299
         self.input_height = 299
+        self.dtype = torch.float32
 
         self.layer, self.num_features = inception_layer
 

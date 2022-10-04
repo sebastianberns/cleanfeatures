@@ -31,6 +31,7 @@ class Resnet50(nn.Module):
         self.input_channels = 3
         self.input_width = 224
         self.input_height = 224
+        self.dtype = torch.float32
 
         self.layer, self.num_features = resnet_layer
 

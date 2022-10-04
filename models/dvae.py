@@ -26,6 +26,7 @@ class DVAE(nn.Module):
         self.input_channels = 3
         self.input_width = 256
         self.input_height = 256
+        self.dtype = torch.int16
 
         self.num_features = 1024  # 32 x 32
 
@@ -61,5 +62,5 @@ class DVAE(nn.Module):
 
         input = self.normalization(input)
         logits = self.encoder(input)  # [B x 8192 x 32 x 32]
-        codes = torch.argmax(logits, axis=1)  # [B x 32 x 32]
-        return codes.reshape(B, -1)  # [B x 1024]
+        codes = torch.argmax(logits, dim=1)  # [B x 32 x 32]
+        return codes.reshape(B, -1).to(self.dtype)  # [B x 1024]
