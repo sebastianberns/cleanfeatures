@@ -82,7 +82,7 @@ class CleanFeatures:
         self.dtype = self.model.dtype
 
         self._features = None
-        self._targets = None
+        self._targets = None  # Only set when processing a data set with labels
 
         logging.info('CleanFeatures ready')
 
@@ -230,12 +230,22 @@ class CleanFeatures:
                                       shuffle=False):
         logging.info(f"Computing features for {num_samples:,} samples from data set")
 
+        # Determine dimensionality of data set targets
+        if isinstance(dataset.targets, list):  # List
+            target_shape = (num_samples, )  # One dimension
+        elif type(dataset.targets) in [np.ndarray, torch.Tensor]:  # Numpy array or Tensor
+            _, *target_dims = dataset.targets.shape  # Possibly multiple dimensions
+            target_shape = (num_samples, *target_dims)
+        else:  # Any other target data type not implemented
+            raise NotImplementedError(f"Data set targets of type '{type(dataset.targets)}' currently not supported")
+
         dataloader = DataLoader(dataset, batch_size=batch_size,
                                 num_workers=num_workers, shuffle=shuffle)
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
                                dtype=self.dtype, device=self.device)
-        targets = []
+        targets = torch.zeros(target_shape, dtype=dataset.targets.dtype,
+                              device=self.device)
 
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
@@ -244,11 +254,12 @@ class CleanFeatures:
 
             samples, labels = next(dataiterator)  # Load samples and labels
             samples = samples[:b].to(self.device)  # Limit and convert
-            targets.extend(labels[:b])  # Collect target labels
 
             samples = self.resize.batch_resize(samples)  # Clean resize
             samples = self._augment_dimensions(samples)  # Adjust input dimensions
             features[c:c+b] = self._model_fwd(samples)  # Compute and append
+            targets[c:c+b] = labels[:b]  # Collect target labels
+            
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
 
