@@ -172,7 +172,7 @@ class CleanFeatures:
 
         features = features.to(self.dtype)  # Convert to data type
         self._features = features
-        logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
+        logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features
 
     """
@@ -208,7 +208,7 @@ class CleanFeatures:
         # Loop breaks when counter is equal to requested number of samples
 
         self._features = features
-        logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
+        logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features
 
     """
@@ -267,7 +267,7 @@ class CleanFeatures:
         self._features = features
         if len(targets) > 0:
             self._targets = targets
-        logging.info("Computed features for {0} batch items in {1} dimensions.".format(*features.shape))
+        logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features, targets
 
     def save(self, path="./", name="features"):
