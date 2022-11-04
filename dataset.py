@@ -27,6 +27,7 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
         data = torch.load(path, map_location=map_location)
         self.features = data['features']
         self.targets = data['targets']
+        self.data = self.features  # Alias
         self.num_features = self.features.size(1)
 
         assert self.features.size(0) == len(self.targets), (f"Size mismatch "

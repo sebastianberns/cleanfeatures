@@ -10,6 +10,10 @@ Currently available feature embedding models:
 - InceptionV3
 - Resnet50
 
+Improvements over other implementations:
+
+- Normalization after resize. The per-channel resize operation can change the range of values of an image. 
+
 ## Setup
 
 ### Dependencies
