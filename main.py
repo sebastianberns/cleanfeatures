@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
@@ -259,7 +260,7 @@ class CleanFeatures:
             samples = self._augment_dimensions(samples)  # Adjust input dimensions
             features[c:c+b] = self._model_fwd(samples)  # Compute and append
             targets[c:c+b] = labels[:b]  # Collect target labels
-            
+
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
 
