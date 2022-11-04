@@ -233,10 +233,12 @@ class CleanFeatures:
 
         # Determine dimensionality of data set targets
         if isinstance(dataset.targets, list):  # List
-            target_shape = (num_samples, )  # One dimension
+            targets_shape = (num_samples, )  # Assuming one dimension
+            targets_dtype = torch.int64  # Default int data type
         elif type(dataset.targets) in [np.ndarray, torch.Tensor]:  # Numpy array or Tensor
             _, *target_dims = dataset.targets.shape  # Possibly multiple dimensions
-            target_shape = (num_samples, *target_dims)
+            targets_shape = (num_samples, *target_dims)
+            targets_dtype = dataset.targets.dtype
         else:  # Any other target data type not implemented
             raise NotImplementedError(f"Data set targets of type '{type(dataset.targets)}' currently not supported")
 
@@ -245,7 +247,7 @@ class CleanFeatures:
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
                                dtype=self.dtype, device=self.device)
-        targets = torch.zeros(target_shape, dtype=dataset.targets.dtype,
+        targets = torch.zeros(targets_shape, dtype=targets_dtype,
                               device=self.device)
 
         c = 0  # Counter
