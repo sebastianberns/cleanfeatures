@@ -7,7 +7,6 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
-from torchvision.transforms import Compose, ToTensor
 
 from . import models
 from .transforms import Resize
