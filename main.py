@@ -103,7 +103,7 @@ class CleanFeatures:
     """
     def _handle_input(self, input, *kwargs):
         if isinstance(input, torch.Tensor):  # Tensor ready for processing
-            return self.compute_features(input)
+            return self.compute_features_from_samples(input, *kwargs)
         elif isinstance(input, nn.Module):  # Generator model
             return self.compute_features_from_generator(input, *kwargs)
         elif isinstance(input, Dataset):  # Data set
@@ -150,10 +150,11 @@ class CleanFeatures:
         return input
 
     """
-    Compute features of batch, image or channel
+    Compute features of small batch, single image or individual channel
+    Convenient for batches of samples small enough to be processed in one go
 
         input (Pytorch tensor): data matrix with values in range (0, 255)
-            [B, C, W, H]: batch of images
+            [B, C, W, H]: small batch of images
             [C, W, H]: single image
             [W, H]: individual channel
 
@@ -175,7 +176,37 @@ class CleanFeatures:
         return features
 
     """
+    Compute features from a tensor samples 
+    Conventient when number of samples is too big to be parsed in one go
+
+        samples (Tensor): Pre-trained generator model
+        batch_size (int, optional): Batch size for sample processing. Default: 128
+
+    Returns a tensor of features [B, F] in range (-1, +1),
+    where F is the number of features
+    """
+    def compute_features_from_samples(self, samples, batch_size=128):
+        num_samples = samples.shape[0]  # Number of samples
+        features = torch.zeros((num_samples, self.num_features),
+                               dtype=self.dtype, device=self.device)
+        c = 0  # Counter
+        while c < num_samples:  # Until enough samples have been collected
+            b = min(batch_size, (num_samples - c))  # Get batch size ...
+                                # last batch may need to be smaller
+
+            batch_samples = samples[c:c+b]
+            features[c:c+b] = self.compute_features(batch_samples)
+            c += b  # Increase counter
+        # Loop breaks when counter is equal to requested number of samples
+
+        self._features = features
+        logging.info("Computed features for {0:,} samples in {1} dimensions.".format(*features.shape))
+        return features
+
+    """
     Compute features of samples from pre-trained generator
+    Expected output of the generator is a tensor of size [B, C, W, H],
+    where B is the batch size equal to the input
 
         generator (Module): Pre-trained generator model
         z_dim (int): Number of generator input dimensions
