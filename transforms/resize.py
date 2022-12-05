@@ -1,6 +1,10 @@
+from enum import IntEnum
+from typing import Union
+
 import numpy as np
 from PIL import Image
 import torch
+from torch import Tensor
 
 
 if not hasattr(Image, 'Resampling'):  # Pillow < 9.1
@@ -18,7 +22,8 @@ class Resize:
         normalize (bool, optional): whether to change the range of values to
             the original values after resize. Default: True
     """
-    def __init__(self, channels=3, width=299, height=299, filter=Image.Resampling.BICUBIC, normalize=True):
+    def __init__(self, channels: int = 3, width: int = 299, height: int = 299, 
+                 filter: Union[int, IntEnum] = Image.Resampling.BICUBIC, normalize: bool = True) -> None:
         self.channels = channels
         self.width = width
         self.height = height
@@ -35,7 +40,7 @@ class Resize:
 
     Returns a tensor of the resized input
     """
-    def _handle_input(self, input):
+    def _handle_input(self, input: Tensor) -> Tensor:
         dims = len(input.shape)
         if dims == 4:
             return self.batch_resize(input)
@@ -55,7 +60,7 @@ class Resize:
     Returns a tensor of the resized batch [B, C, X, Y],
     where X and Y are the resized width and height
     """
-    def batch_resize(self, batch):
+    def batch_resize(self, batch: Tensor) -> Tensor:
         device = batch.device
         batch_size = batch.shape[0]
 
@@ -72,7 +77,7 @@ class Resize:
     Returns a tensor of the resized image [C, X, Y],
     where X and Y are the resized width and height
     """
-    def image_resize(self, image):
+    def image_resize(self, image: Tensor) -> Tensor:
         device = image.device
         channels = image.shape[0]
         vmin, vmax = image.min(), image.max()  # Original min and max values
@@ -97,7 +102,7 @@ class Resize:
 
     Returns image tensor normalized to original value range [C, W, H]
     """
-    def _normalize_after_resize(self, x, tmin, tmax):
+    def _normalize_after_resize(self, x: Tensor, tmin: float, tmax: float) -> Tensor:
         # vmin, vmax : target min and max values (original)
         cmin, cmax = x.min(), x.max()  # Current min and max values (resized)
 
@@ -115,7 +120,7 @@ class Resize:
 
     Returns an image with augmented channels [C, W, H]
     """
-    def _augment_channels(self, image):
+    def _augment_channels(self, image: Tensor) -> Tensor:
         channels = image.shape[0]
 
         if channels < self.channels:
@@ -136,12 +141,12 @@ class Resize:
     Returns a tensor of the resized channel [X, Y],
     where X and Y are the resized width and height
     """
-    def channel_resize(self, channel):
+    def channel_resize(self, channel: Tensor) -> Tensor:
         device = channel.device
         channel_np = channel.cpu().numpy().astype(np.float32)  # Convert to nparray on CPU
         img = Image.fromarray(channel_np, mode='F')  # Create Image from 32-bit floating point pixels
         img = img.resize((self.width, self.height), resample=self.filter)  # Clean resize
         return torch.tensor(np.asarray(img, dtype=np.float32), device=device)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Resize, {self.channels} x {self.width} x {self.height} [C, W, H]"

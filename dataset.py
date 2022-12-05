@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, List, Tuple, Union
+from typing import Callable, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -17,7 +17,7 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
         map_location (str or device)
     """
     features: Tensor
-    targets: List[int]
+    targets: Tensor
     num_features: int
 
     def __init__(self, path: Union[str, Path], map_location: Union[

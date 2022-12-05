@@ -2,10 +2,12 @@
 
 import logging
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 import torch
 from torch import nn
+from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 
 from . import models
@@ -56,8 +58,8 @@ class CleanFeatures:
         log (str): Log level
         kwargs (dict): Additional parameters for embedding model
     """
-    def __init__(self, model_path='./models', model='InceptionV3',
-                 device=None, log='warning', **kwargs):
+    def __init__(self, model_path: Union[str, Path] = './models', model: str = 'InceptionV3',
+                 device: Union[str, torch.device, None] = None, log: str = 'warning', **kwargs) -> None:
 
         # Check if model is implemented
         assert hasattr(models, model), f"Model '{model}' is not available"
@@ -87,11 +89,11 @@ class CleanFeatures:
         logging.info('CleanFeatures ready')
 
     @property
-    def features(self):
+    def features(self) -> Tensor:
         return self._features
 
     @property
-    def targets(self):
+    def targets(self) -> Tensor:
         return self._targets
 
     """
@@ -101,8 +103,8 @@ class CleanFeatures:
                 Module: sample batch from generator model
                 Dataset: load batch from data set
     """
-    def _handle_input(self, input, *kwargs):
-        if isinstance(input, torch.Tensor):  # Tensor ready for processing
+    def _handle_input(self, input: Union[Tensor, nn.Module, Dataset], *kwargs) -> Tensor:
+        if isinstance(input, Tensor):  # Tensor ready for processing
             return self.compute_features_from_samples(input, *kwargs)
         elif isinstance(input, nn.Module):  # Generator model
             return self.compute_features_from_generator(input, *kwargs)
@@ -124,7 +126,7 @@ class CleanFeatures:
     """
     Perform a gradient-free model forward pass
     """
-    def _model_fwd(self, input):
+    def _model_fwd(self, input: Tensor) -> Tensor:
         with torch.no_grad():
             return self.model(input)
 
@@ -135,7 +137,7 @@ class CleanFeatures:
 
     Returns a tensor of the input data [B, 3, W, H]
     """
-    def _augment_dimensions(self, input):
+    def _augment_dimensions(self, input: Tensor) -> Tensor:
         dims = len(input.shape)
 
         # Adjust number of dimensions
@@ -160,7 +162,7 @@ class CleanFeatures:
 
     Returns a tensor of features [B, F], where F is the number of features
     """
-    def compute_features(self, input):
+    def compute_features(self, input: Tensor) -> Tensor:
         logging.info("Resizing ...")
         input = self.resize(input)  # Clean resize
 
@@ -185,7 +187,7 @@ class CleanFeatures:
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_samples(self, samples, batch_size=128):
+    def compute_features_from_samples(self, samples: Tensor, batch_size: int = 128) -> Tensor:
         num_samples = samples.shape[0]  # Number of samples
         features = torch.zeros((num_samples, self.num_features),
                                dtype=self.dtype, device=self.device)
@@ -216,8 +218,8 @@ class CleanFeatures:
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_generator(self, generator, z_dim, num_samples,
-                                        batch_size=128):
+    def compute_features_from_generator(self, generator: nn.Module, z_dim: int, num_samples: int,
+                                        batch_size: int = 128) -> Tensor:
         logging.info(f"Computing features for {num_samples:,} samples from generator")
         generator.eval()
         features = torch.zeros((num_samples, self.num_features),
@@ -256,9 +258,9 @@ class CleanFeatures:
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_dataset(self, dataset, num_samples,
-                                      batch_size=128, num_workers=0,
-                                      shuffle=False):
+    def compute_features_from_dataset(self, dataset: Dataset, num_samples: int,
+                                      batch_size: int = 128, num_workers: int = 0,
+                                      shuffle: bool = False) -> Tensor:
         logging.info(f"Computing features for {num_samples:,} samples from data set")
 
         # Determine dimensionality of data set targets
@@ -302,7 +304,7 @@ class CleanFeatures:
         logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features, targets
 
-    def save(self, path="./", name="features"):
+    def save(self, path: Union[str, Path] = "./", name: str = "features") -> None:
         dir = self._get_path(path)
         dir.mkdir(exist_ok=True)  # Create save directory
         save_path = dir/f"{name}.pt"
@@ -312,13 +314,13 @@ class CleanFeatures:
 
         logging.info(f"Features and targets saved to '{save_path}'")
 
-    def set_log_level(self, log_level):
+    def set_log_level(self, log_level: str) -> None:
         assert log_level in log_levels.keys(), f"Log level {log_level} not available"
         logging.basicConfig(format='%(message)s', level=log_levels[log_level])
 
-    def _get_path(self, path):
+    def _get_path(self, path: Union[str, Path]) -> Path:
         # Ensure clean absolute Path object
         return Path(path).expanduser().resolve()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"CleanFeatures, {self.model.name} embedding, {self.num_features} features"
