@@ -173,8 +173,6 @@ class CleanFeatures:
         features = self._model_fwd(input)  # Embed model forward pass
 
         features = features.to(self.dtype)  # Convert to data type
-        self._features = features
-        logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features
 
     """
@@ -233,9 +231,7 @@ class CleanFeatures:
             with torch.no_grad():
                 samples = generator(z)  # Generate images
 
-            samples = self.resize.batch_resize(samples)  # Clean resize
-            samples = self._augment_dimensions(samples)  # Adjust input dimensions
-            features[c:c+b] = self._model_fwd(samples)  # Model fwd pass
+            features[c:c+b] = self.compute_features(samples)  # Compute and append
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
 
@@ -289,11 +285,10 @@ class CleanFeatures:
 
             samples, labels = next(dataiterator)  # Load samples and labels
             samples = samples[:b].to(self.device)  # Limit and convert
+            labels = labels[:b].to(self.device)
 
-            samples = self.resize.batch_resize(samples)  # Clean resize
-            samples = self._augment_dimensions(samples)  # Adjust input dimensions
-            features[c:c+b] = self._model_fwd(samples)  # Compute and append
-            targets[c:c+b] = labels[:b]  # Collect target labels
+            features[c:c+b] = self.compute_features(samples)  # Compute and append
+            targets[c:c+b] = labels  # Collect target labels
 
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
