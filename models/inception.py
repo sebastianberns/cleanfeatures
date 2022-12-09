@@ -3,9 +3,9 @@ from pathlib import Path
 import torch
 from torch import nn
 from torch.hub import load_state_dict_from_url
-from torchvision.models.inception import Inception3
-from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names
-from torchvision.transforms import Normalize
+from torchvision.models.inception import Inception3  # type: ignore[import]
+from torchvision.models.feature_extraction import create_feature_extractor, get_graph_node_names  # type: ignore[import]
+from torchvision.transforms import Normalize  # type: ignore[import]
 
 
 # https://github.com/pytorch/vision/blob/v0.13.0/torchvision/models/inception.py#L412

@@ -4,7 +4,7 @@ from pathlib import Path
 import clip
 import torch
 from torch import nn
-from torchvision.transforms import Normalize
+from torchvision.transforms import Normalize  # type: ignore[import]
 
 
 _MODELS = {

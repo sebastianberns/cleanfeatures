@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, Optional
 
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 
 
-class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
+class CleanFeaturesDataset(Dataset[Tuple[Tensor, Tensor]]):
     r"""Clean features dataset wrapper
 
     Each sample will be retrieved by indexing the features tensor along the
@@ -20,8 +20,8 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
     targets: Tensor
     num_features: int
 
-    def __init__(self, path: Union[str, Path], map_location: Union[
-                 torch.device, str, bytes, dict, Callable]=None) -> None:
+    def __init__(self, path: Union[str, Path], map_location: Optional[Union[
+                 torch.device, str, bytes, dict, Callable]] = None) -> None:
         path = Path(path).expanduser().resolve()
 
         data = torch.load(path, map_location=map_location)
@@ -34,7 +34,7 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, int]]):
             f"between features ({self.features.size(0):,} samples) and "
             f"targets ({len(self.targets):,} labels)")
 
-    def __getitem__(self, index) -> Tuple[Tensor, int]:
+    def __getitem__(self, index) -> Tuple[Tensor, Tensor]:
         return self.features[index], self.targets[index]
 
     def __len__(self) -> int:

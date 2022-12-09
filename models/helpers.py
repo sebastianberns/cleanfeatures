@@ -3,8 +3,6 @@ from pathlib import Path
 import shutil
 import urllib.request
 
-import requests
-
 
 """
 Download any file from a url if it does not exist

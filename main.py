@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Tuple, Union, Optional
 
 import numpy as np
 import torch
@@ -58,8 +58,8 @@ class CleanFeatures:
         log (str): Log level
         kwargs (dict): Additional parameters for embedding model
     """
-    def __init__(self, model_path: Union[str, Path] = './models', model: str = 'InceptionV3',
-                 device: Union[str, torch.device, None] = None, log: str = 'warning', **kwargs) -> None:
+    def __init__(self, model_path: Union[str, Path] = './models', model: str = 'InceptionV3', 
+                 device: Optional[Union[str, torch.device]] = None, log: str = 'warning', **kwargs) -> None:
 
         # Check if model is implemented
         assert hasattr(models, model), f"Model '{model}' is not available"
@@ -83,17 +83,17 @@ class CleanFeatures:
         self.num_features = self.model.num_features
         self.dtype = self.model.dtype
 
-        self._features = None
-        self._targets = None  # Only set when processing a data set with labels
+        self._features: Optional[Tensor] = None
+        self._targets: Optional[Tensor] = None  # Only set when processing a data set with labels
 
         logging.info('CleanFeatures ready')
 
     @property
-    def features(self) -> Tensor:
+    def features(self) -> Optional[Tensor]:
         return self._features
 
     @property
-    def targets(self) -> Tensor:
+    def targets(self) -> Optional[Tensor]:
         return self._targets
 
     """
@@ -103,13 +103,13 @@ class CleanFeatures:
                 Module: sample batch from generator model
                 Dataset: load batch from data set
     """
-    def _handle_input(self, input: Union[Tensor, nn.Module, Dataset], *kwargs) -> Tensor:
+    def _handle_input(self, input: Union[Tensor, nn.Module, Dataset], **kwargs) -> Union[Tensor, Tuple[Tensor, Optional[Tensor]]]:
         if isinstance(input, Tensor):  # Tensor ready for processing
-            return self.compute_features_from_samples(input, *kwargs)
+            return self.compute_features_from_samples(input, **kwargs)
         elif isinstance(input, nn.Module):  # Generator model
-            return self.compute_features_from_generator(input, *kwargs)
+            return self.compute_features_from_generator(input, **kwargs)
         elif isinstance(input, Dataset):  # Data set
-            return self.compute_features_from_dataset(input, *kwargs)
+            return self.compute_features_from_dataset(input, **kwargs)
         else:
             raise ValueError(f"Input type {type(input)} is not supported")
 
@@ -254,29 +254,29 @@ class CleanFeatures:
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_dataset(self, dataset: Dataset, num_samples: int,
-                                      batch_size: int = 128, num_workers: int = 0,
-                                      shuffle: bool = False) -> Tensor:
+    def compute_features_from_dataset(self, dataset: Dataset, num_samples: int, batch_size: int = 128, 
+                                      num_workers: int = 0, shuffle: bool = False) -> Tuple[Tensor, Optional[Tensor]]:
         logging.info(f"Computing features for {num_samples:,} samples from data set")
-
-        # Determine dimensionality of data set targets
-        if isinstance(dataset.targets, list):  # List
-            targets_shape = (num_samples, )  # Assuming one dimension
-            targets_dtype = torch.int64  # Default int data type
-        elif type(dataset.targets) in [np.ndarray, torch.Tensor]:  # Numpy array or Tensor
-            _, *target_dims = dataset.targets.shape  # Possibly multiple dimensions
-            targets_shape = (num_samples, *target_dims)
-            targets_dtype = dataset.targets.dtype
-        else:  # Any other target data type not implemented
-            raise NotImplementedError(f"Data set targets of type '{type(dataset.targets)}' currently not supported")
 
         dataloader = DataLoader(dataset, batch_size=batch_size,
                                 num_workers=num_workers, shuffle=shuffle)
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
                                dtype=self.dtype, device=self.device)
-        targets = torch.zeros(targets_shape, dtype=targets_dtype,
-                              device=self.device)
+
+        targets = None  # Default: do not process targets
+        if hasattr(dataset, 'targets'):  # Unless dataset provides targets
+            # Determine targets dimensionality and data type
+            if isinstance(dataset.targets, list):  # List
+                targets_shape: Tuple[int, ...] = (num_samples, )  # Assuming one dimension
+                targets_dtype = torch.int64  # Default int data type
+            elif type(dataset.targets) in [np.ndarray, torch.Tensor]:  # Numpy array or Tensor
+                _, *target_dims = dataset.targets.shape  # Possibly multiple dimensions
+                targets_shape: Tuple[int, ...] = (num_samples, *target_dims)  # type: ignore[no-redef]
+                targets_dtype = dataset.targets.dtype
+            else:  # Other data types not implemented
+                raise NotImplementedError(f"Data set targets of type '{type(dataset.targets)}' currently not supported")
+            targets = torch.zeros(targets_shape, dtype=targets_dtype, device=self.device)
 
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
@@ -288,14 +288,14 @@ class CleanFeatures:
             labels = labels[:b].to(self.device)
 
             features[c:c+b] = self.compute_features(samples)  # Compute and append
-            targets[c:c+b] = labels  # Collect target labels
+            if targets is not None:
+                targets[c:c+b] = labels  # Collect target labels
 
             c += b  # Increase counter
         # Loop breaks when counter is equal to requested number of samples
 
         self._features = features
-        if len(targets) > 0:
-            self._targets = targets
+        self._targets = targets
         logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features, targets
 

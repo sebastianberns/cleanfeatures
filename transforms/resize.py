@@ -2,7 +2,7 @@ from enum import IntEnum
 from typing import Union
 
 import numpy as np
-from PIL import Image
+from PIL import Image  # type: ignore[import]
 import torch
 from torch import Tensor
 
@@ -78,8 +78,8 @@ class Resize:
     where X and Y are the resized width and height
     """
     def image_resize(self, image: Tensor) -> Tensor:
-        device = image.device
-        channels = image.shape[0]
+        device: torch.device = image.device
+        channels: int = image.shape[0]
         vmin, vmax = image.min(), image.max()  # Original min and max values
 
         resized_image = torch.zeros((channels, self.width, self.height),
@@ -98,11 +98,11 @@ class Resize:
     Helper function for image_resize()
 
         x (Tensor): image with values in current range [C, W, H]
-        tmin, tmax (float): min and max values of target range (original image values)
+        tmin, tmax (Tensor): min and max values of target range (original image values)
 
     Returns image tensor normalized to original value range [C, W, H]
     """
-    def _normalize_after_resize(self, x: Tensor, tmin: float, tmax: float) -> Tensor:
+    def _normalize_after_resize(self, x: Tensor, tmin: Tensor, tmax: Tensor) -> Tensor:
         # vmin, vmax : target min and max values (original)
         cmin, cmax = x.min(), x.max()  # Current min and max values (resized)
 
