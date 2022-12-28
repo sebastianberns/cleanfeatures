@@ -3,7 +3,7 @@
 Compute ‘clean’ high-level features for a batch of images with a pre-trained embedding model.
 This is a custom implementation of best practices recommended by [Parmar et al. (2022)](https://openaccess.thecvf.com/content/CVPR2022/html/Parmar_On_Aliased_Resizing_and_Surprising_Subtleties_in_GAN_Evaluation_CVPR_2022_paper.html) and partially builds on code from [GaParmar/clean-fid](https://github.com/GaParmar/clean-fid).
 
-Currently available feature embedding models:
+CleanFeatures currently supports the following feature embedding models:
 
 - CLIP
 - DVAE (DALL-E)
@@ -12,7 +12,10 @@ Currently available feature embedding models:
 
 Improvements over other implementations:
 
-- Normalization after resize. The per-channel resize operation can change the range of values of an image. 
+- Normalization after resize. The per-channel resize operation can change the range of values of an image tensor, causing it to go outside the normalized range [0, 1]. This implementation re-normalizes the image tensor after resize, restoring the previous range of values.
+- Clean features can be saved to disk with the [`save` command](#save). 
+- The [CleanFeaturesDataset class](#cleanfeaturesdataset-class) allows to load pre-computed features as a data set. 
+- The clean [Resize](#clean-resize-transform) operation can further be used as a Pytorch transform.
 
 ## Setup
 
@@ -31,7 +34,7 @@ Improvements over other implementations:
 
 ## Usage
 
-Assuming that the repository is available in the working directory.
+Assuming that the repository is available in the working directory or Python path.
 
 ```python
 from cleanfeatures import CleanFeatures  # 1.
@@ -54,6 +57,7 @@ cf = CleanFeatures(model_path='./models', model='InceptionV3', device=None,
 - `model_path` (str or Path object, optional): path to directory where model checkpoint is saved or should be saved to. Default: './models'.
 - `model` (str, optional): choice of pre-trained feature extraction model. Options:
   - CLIP
+  - DVAE (DALL-E)
   - InceptionV3 (default)
   - Resnet50
 - `device` (str or torch.device, optional): device which the loaded model will be allocated to. Default: 'cuda' if a GPU is available, otherwise 'cpu'.
@@ -147,12 +151,13 @@ In the above example, the features will be stored as `./save/features.pt`.
 
 ### Attributes
 
-#### features
+#### features and targets
 
-Returns the last computed feature tensor if available, `None` otherwise.
+Returns the last computed feature and targets tensors if available, `None` otherwise.
 
 ```python
 features = cf.features
+targets = cf.targets  # Only available if data set provides labels
 ```
 
 ### Clean Resize transform
@@ -199,4 +204,4 @@ dataloader = DataLoader(dataset, batch_size=128, num_workers=8)  # 3.
 
 ## References
 
-Parmar, G., Zhang, R., & Zhu, J.-Y. (2022). On Aliased Resizing and Surprising Subtleties in GAN Evaluation. [*Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition*, 11410–11420.]( https://openaccess.thecvf.com/content/CVPR2022/html/Parmar_On_Aliased_Resizing_and_Surprising_Subtleties_in_GAN_Evaluation_CVPR_2022_paper.html)
+Parmar, G., Zhang, R., & Zhu, J.-Y. (2022). On Aliased Resizing and Surprising Subtleties in GAN Evaluation. [*Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition*, 11410–11420.](https://openaccess.thecvf.com/content/CVPR2022/html/Parmar_On_Aliased_Resizing_and_Surprising_Subtleties_in_GAN_Evaluation_CVPR_2022_paper.html)
