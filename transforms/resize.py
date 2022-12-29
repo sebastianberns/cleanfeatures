@@ -103,13 +103,13 @@ class Resize:
     Returns image tensor normalized to original value range [C, W, H]
     """
     def _normalize_after_resize(self, x: Tensor, tmin: Tensor, tmax: Tensor) -> Tensor:
-        # vmin, vmax : target min and max values (original)
+        # tmin, tmax : target min and max values (original)
         cmin, cmax = x.min(), x.max()  # Current min and max values (resized)
 
-        y = x - cmin           # current values - current min
-        y = y * (tmax - tmin)  # * target range
-        y = y / (cmax - cmin)  # / current range
-        y = y + tmin           # + target min
+        y = x - cmin           # Subtract current minimum value
+        y = y * (tmax - tmin)  # Multiply by target range
+        y = y / (cmax - cmin)  # Divide by current range
+        y = y + tmin           # Add target minimum value
         return y
 
     """
