@@ -143,10 +143,8 @@ class CleanFeatures:
         # Adjust number of dimensions
         if dims == 2:  # [W, H]
             input.unsqueeze_(0)  # Add channel dimension
-            logging.info("Added channel dimension")
         if dims == 3:  # [C, W, H]
             input.unsqueeze_(0)  # Add batch dimension
-            logging.info("Added batch dimension")
 
         # Now all input is standardized to [B, C, W, H]
         return input
@@ -163,15 +161,9 @@ class CleanFeatures:
     Returns a tensor of features [B, F], where F is the number of features
     """
     def compute_features(self, input: Tensor) -> Tensor:
-        logging.info("Resizing ...")
         input = self.resize(input)  # Clean resize
-
-        logging.info("Adjusting number of dimensions ...")
         input = self._augment_dimensions(input)  # Adjust input dimensions
-
-        logging.info("Model forward pass ...")
         features = self._model_fwd(input)  # Embed model forward pass
-
         features = features.to(self.dtype)  # Convert to data type
         return features
 
@@ -187,6 +179,7 @@ class CleanFeatures:
     """
     def compute_features_from_samples(self, samples: Tensor, batch_size: int = 128) -> Tensor:
         num_samples = samples.shape[0]  # Number of samples
+        logging.info(f"Computing features for {num_samples:,} samples")
         features = torch.zeros((num_samples, self.num_features),
                                dtype=self.dtype, device=self.device)
         c = 0  # Counter
