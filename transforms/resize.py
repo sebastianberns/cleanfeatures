@@ -42,6 +42,9 @@ class Resize:
     Returns a tensor of the resized input
     """
     def _handle_input(self, input: Tensor) -> Tensor:
+        if not isinstance(input, Tensor):
+            raise TypeError("Currently Resize only supports Tensor input. Convert ToTensor() before Resize.")
+
         dims = len(input.shape)
         if dims == 4:
             return self.batch_resize(input)
