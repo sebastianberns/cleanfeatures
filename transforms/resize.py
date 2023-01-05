@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from PIL import Image  # type: ignore[import]
@@ -16,17 +16,18 @@ if not hasattr(Image, 'Resampling'):  # Pillow < 9.1
 class Resize:
     """
     Resize
-        channels (int): number of channels of input and output images
-        width (int), height (int): dimensions of resized output images
+        width (int): dimensions of resized output images
+        height (int, optional): height of resized output images, defaults to width (square image)
+        channels (int): number of channels of input and output images. Default: 3 (RGB)
         filter (PIL.Image.Resampling): resampling filters. Default (and recommended): BICUBIC
         normalize (bool, optional): whether to change the range of values to
             the original values after resize. Default: True
     """
-    def __init__(self, channels: int = 3, width: int = 299, height: int = 299, 
+    def __init__(self, width: int, height: Optional[int] = None, channels: int = 3, 
                  filter: Union[int, IntEnum] = Image.Resampling.BICUBIC, normalize: bool = True) -> None:
         self.channels = channels
         self.width = width
-        self.height = height
+        self.height = width if height is None else height
         self.filter = filter
         self.normalize = normalize
 

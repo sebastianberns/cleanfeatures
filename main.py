@@ -77,9 +77,9 @@ class CleanFeatures:
         self.model = model_fn(path=model_path, device=self.device, **kwargs)
 
         logging.info('Building resize')
-        self.resize = Resize(channels=self.model.input_channels,
-                             width=self.model.input_width,
-                             height=self.model.input_height)
+        self.resize = Resize(width=self.model.input_width,
+                             height=self.model.input_height,
+                             channels=self.model.input_channels)
         self.num_features = self.model.num_features
         self.dtype = self.model.dtype
 
