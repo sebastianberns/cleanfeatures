@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import numpy as np
 from PIL import Image  # type: ignore[import]
+from PIL.Image import Image as PILImage  # type: ignore[import]
 import torch
 from torch import Tensor
 
@@ -32,56 +33,64 @@ class Resize:
         self.normalize = normalize
 
     """
-    Resize a batch, an image or a channel
-
-        input (Pytorch tensor): data matrix with values in range (0, 255)
-            [B, C, W, H]: batch of images
-            [C, W, H]: single image
-            [W, H]: individual channel
-
-    Returns a tensor of the resized input
+    Handle input and send to corresponding methods based on type
+        input (Image): image object with values in range [0, 254]
+        input (Tensor): data matrix with values in range [0, 1]
+    Return the resized input of the same type as input (Image or Tensor)
     """
-    def _handle_input(self, input: Tensor) -> Tensor:
-        if not isinstance(input, Tensor):
-            raise TypeError("Currently Resize only supports Tensor input. Convert ToTensor() before Resize.")
-
-        dims = len(input.shape)
-        if dims == 4:
-            return self.batch_resize(input)
-        elif dims == 3:
+    def _handle_input(self, input: Union[PILImage, Tensor]) -> Union[PILImage, Tensor]:
+        
+        if isinstance(input, PILImage):
             return self.image_resize(input)
-        elif dims == 2:
-            return self.channel_resize(input)
+        elif isinstance(input, Tensor):
+            return self._handle_tensor_input(input)
         else:
-            raise ValueError(f"Input with {dims} dimensions is not supported")
+            raise TypeError("Resize only supports PIL Image and Tensor input.")
 
     __call__ = _handle_input
 
     """
+    Handle Tensor input and send to corresponding methods based on number of dimensions
+        input (Tensor): data matrix with values in range [0, 1]
+            [B, C, W, H]: batch of instances
+            [C, W, H]: single instance
+            [W, H]: individual channel
+    Return a tensor of the resized input
+    """
+    def _handle_tensor_input(self, input: Tensor) -> Tensor:
+        num_dims = len(input.shape)
+        if num_dims == 4:
+            return self.tensor_batch_resize(input)
+        elif num_dims == 3:
+            return self.tensor_instance_resize(input)
+        elif num_dims == 2:
+            return self.tensor_channel_resize(input)
+        else:
+            raise ValueError(f"Input with {num_dims} dimensions is not supported")
+
+    """
     Resize a batch of images
         batch (tensor): [B, C, W, H]
-
-    Returns a tensor of the resized batch [B, C, X, Y],
+    Return a tensor of the resized batch [B, C, X, Y],
     where X and Y are the resized width and height
     """
-    def batch_resize(self, batch: Tensor) -> Tensor:
+    def tensor_batch_resize(self, batch: Tensor) -> Tensor:
         device = batch.device
         batch_size = batch.shape[0]
 
         resized_batch = torch.zeros((batch_size, self.channels, self.width, self.height),
                                     dtype=torch.float32, device=device)
         for i in range(batch_size):
-            resized_batch[i] = self.image_resize(batch[i])
+            resized_batch[i] = self.tensor_instance_resize(batch[i])
         return resized_batch
 
     """
     Resize a single image
         image (tensor): [C, W, H]
-
-    Returns a tensor of the resized image [C, X, Y],
+    Return a tensor of the resized image [C, X, Y],
     where X and Y are the resized width and height
     """
-    def image_resize(self, image: Tensor) -> Tensor:
+    def tensor_instance_resize(self, image: Tensor) -> Tensor:
         device: torch.device = image.device
         channels: int = image.shape[0]
         vmin, vmax = image.min(), image.max()  # Original min and max values
@@ -89,8 +98,7 @@ class Resize:
         resized_image = torch.zeros((channels, self.width, self.height),
                                     dtype=torch.float32, device=device)
         for c in range(channels):
-            resized_image[c] = self.channel_resize(image[c, :, :])
-
+            resized_image[c] = self.tensor_channel_resize(image[c, :, :])
 
         if self.normalize:
             resized_image = self._normalize_after_resize(resized_image, vmin, vmax)
@@ -99,12 +107,10 @@ class Resize:
 
     """
     Normalize image values after resize to previous value range
-    Helper function for image_resize()
-
+    Helper function for tensor_instance_resize()
         x (Tensor): image with values in current range [C, W, H]
         tmin, tmax (Tensor): min and max values of target range (original image values)
-
-    Returns image tensor normalized to original value range [C, W, H]
+    Return image tensor normalized to original value range [C, W, H]
     """
     def _normalize_after_resize(self, x: Tensor, tmin: Tensor, tmax: Tensor) -> Tensor:
         # tmin, tmax : target min and max values (original)
@@ -118,11 +124,9 @@ class Resize:
 
     """
     Augment number of channels to meet the image requirements
-    Helper function for image_resize()
-
+    Helper function for tensor_instance_resize()
         input (Tensor): image of variable number of channels [X, W, H]
-
-    Returns an image with augmented channels [C, W, H]
+    Return an image with augmented channels [C, W, H]
     """
     def _augment_channels(self, image: Tensor) -> Tensor:
         channels = image.shape[0]
@@ -135,22 +139,41 @@ class Resize:
                 raise NotImplementedError(f"Currently no strategy to augment "
                                           f"images of {channels} channels to "
                                           f"{self.channels} channels")
-
         return image
 
     """
-    Resize a single channel image
+    Resize a single channel tensor
         channel (tensor): [W, H]
-
-    Returns a tensor of the resized channel [X, Y],
+    Return a tensor of the resized channel [X, Y],
     where X and Y are the resized width and height
     """
-    def channel_resize(self, channel: Tensor) -> Tensor:
+    def tensor_channel_resize(self, channel: Tensor) -> Tensor:
         device = channel.device
         channel_np = channel.cpu().numpy().astype(np.float32)  # Convert to nparray on CPU
-        img = Image.fromarray(channel_np, mode='F')  # Create Image from 32-bit floating point pixels
-        img = img.resize((self.width, self.height), resample=self.filter)  # Clean resize
+        img = Image.fromarray(channel_np, mode='F')  # Create image from 32-bit floating point pixels
+        img = self.image_channel_resize(img)  # Clean resize
         return torch.tensor(np.asarray(img, dtype=np.float32), device=device)
+
+    """
+    Resize PIL Image
+        input (Image): image object with values in range [0, 254]
+    Return resized image
+    """
+    def image_resize(self, input: PILImage) -> PILImage:
+        resized_channels = []
+        for channel in input.split():
+            resized_channel = self.image_channel_resize(channel)
+            resized_channels.append(resized_channel)
+        return Image.merge(input.mode, resized_channels)
+
+    """
+    Resize a single image channel
+        channel (Image): image in mode L [W, H]
+    Return an image of the resized channel [X, Y],
+    where X and Y are the resized width and height
+    """
+    def image_channel_resize(self, channel: PILImage) -> PILImage:
+        return channel.resize((self.width, self.height), resample=self.filter)
 
     def __repr__(self) -> str:
         return f"Resize, {self.channels} x {self.width} x {self.height} [C, W, H]"
