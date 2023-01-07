@@ -93,15 +93,17 @@ class Resize:
     def tensor_instance_resize(self, image: Tensor) -> Tensor:
         device: torch.device = image.device
         channels: int = image.shape[0]
-        vmin, vmax = image.min(), image.max()  # Original min and max values
 
         resized_image = torch.zeros((channels, self.width, self.height),
                                     dtype=torch.float32, device=device)
         for c in range(channels):
-            resized_image[c] = self.tensor_channel_resize(image[c, :, :])
-
-        if self.normalize:
-            resized_image = self._normalize_after_resize(resized_image, vmin, vmax)
+            channel = image[c, :, :]
+            vmin, vmax = channel.min(), channel.max()  # Channel min and max values
+            resized_channel = self.tensor_channel_resize(channel)
+            if self.normalize:
+                resized_channel = self._normalize_channel_after_resize(resized_channel, vmin, vmax)
+            resized_image[c] = resized_channel
+        
         resized_image = self._augment_channels(resized_image)
         return resized_image
 
@@ -112,7 +114,7 @@ class Resize:
         tmin, tmax (Tensor): min and max values of target range (original image values)
     Return image tensor normalized to original value range [C, W, H]
     """
-    def _normalize_after_resize(self, x: Tensor, tmin: Tensor, tmax: Tensor) -> Tensor:
+    def _normalize_channel_after_resize(self, x: Tensor, tmin: Tensor, tmax: Tensor) -> Tensor:
         # tmin, tmax : target min and max values (original)
         cmin, cmax = x.min(), x.max()  # Current min and max values (resized)
 
