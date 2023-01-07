@@ -108,21 +108,24 @@ class Resize:
         return resized_image
 
     """
-    Normalize image values after resize to previous value range
+    Normalize channel values after resize to previous range
     Helper function for tensor_instance_resize()
-        x (Tensor): image with values in current range [C, W, H]
+        x (Tensor): image channel with values in current range [W, H]
         tmin, tmax (Tensor): min and max values of target range (original image values)
-    Return image tensor normalized to original value range [C, W, H]
+    Return image channel tensor normalized to original value range [W, H]
     """
     def _normalize_channel_after_resize(self, x: Tensor, tmin: Tensor, tmax: Tensor) -> Tensor:
         # tmin, tmax : target min and max values (original)
         cmin, cmax = x.min(), x.max()  # Current min and max values (resized)
+        trange = (tmax - tmin)  # Target range
+        crange = (cmax - cmin)  # Current range
 
-        y = x - cmin           # Subtract current minimum value
-        y = y * (tmax - tmin)  # Multiply by target range
-        y = y / (cmax - cmin)  # Divide by current range
-        y = y + tmin           # Add target minimum value
-        return y
+        if trange > 0 and crange > 0:  # Prevent division by zero
+            x = x - cmin    # Subtract current minimum value
+            x = x * trange  # Multiply by target range
+            x = x / crange  # Divide by current range
+            x = x + tmin    # Add target minimum value
+        return x
 
     """
     Augment number of channels to meet the image requirements
