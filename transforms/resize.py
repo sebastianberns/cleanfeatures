@@ -19,16 +19,16 @@ class Resize:
     Resize
         width (int): dimensions of resized output images
         height (int, optional): height of resized output images, defaults to width (square image)
-        channels (int): number of channels of input and output images. Default: 3 (RGB)
+        channels (int, optional): number of channels of input and output images. Default: None (no channel augmentation)
         filter (PIL.Image.Resampling): resampling filters. Default (and recommended): BICUBIC
         normalize (bool, optional): whether to change the range of values to
             the original values after resize. Default: True
     """
-    def __init__(self, width: int, height: Optional[int] = None, channels: int = 3, 
+    def __init__(self, width: int, height: Optional[int] = None, channels: Optional[int] = None, 
                  filter: Union[int, IntEnum] = Image.Resampling.BICUBIC, normalize: bool = True) -> None:
-        self.channels = channels
         self.width = width
         self.height = width if height is None else height
+        self.channels = channels
         self.filter = filter
         self.normalize = normalize
 
@@ -77,8 +77,9 @@ class Resize:
     def tensor_batch_resize(self, batch: Tensor) -> Tensor:
         device = batch.device
         batch_size = batch.shape[0]
+        num_channels = batch.shape[1] if not self.channels else self.channels
 
-        resized_batch = torch.zeros((batch_size, self.channels, self.width, self.height),
+        resized_batch = torch.zeros((batch_size, num_channels, self.width, self.height),
                                     dtype=torch.float32, device=device)
         for i in range(batch_size):
             resized_batch[i] = self.tensor_instance_resize(batch[i])
@@ -136,7 +137,7 @@ class Resize:
     def _augment_channels(self, image: Tensor) -> Tensor:
         channels = image.shape[0]
 
-        if channels < self.channels:
+        if self.channels is not None and channels < self.channels:
             if channels == 1:  # Grayscale image
                 # Increase channel dimension with same data (just view, no copy)
                 image = image.expand(self.channels, -1, -1)
