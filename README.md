@@ -19,6 +19,8 @@ Improvements over other implementations:
 
 ## Setup
 
+Include `cleanfeatures` directory in Python path. Currently, this module does not have an installer.
+
 ### Dependencies
 
 - torch (Pytorch)
@@ -160,29 +162,9 @@ features = cf.features
 targets = cf.targets  # Only available if data set provides labels
 ```
 
-### Clean Resize transform
+### Resize transform
 
-Use the Resize class for anti-aliased image resizing in a dataset transform.
-
-```python
-from cleanfeatures import Resize
-from torchvision.datasets import CIFAR10
-from torchvision.transforms import Compose, ToTensor
-
-transform = Compose([
-    ToTensor(),  # No resize, no normalization, just convert to tensor
-    Resize(64, 64, 3)  # Clean resize to 64 x 64 px with 3 channels
-])
-dataset = CIFAR10(root='data', transform=transform)  # Example data set
-```
-
-The Resize class takes the following arguments:
-
-- `width` (int): dimensions of resized output images
-- `height` (int, optional): height of resized output images, defaults to width (square image)
-- `channels` (int, optional): number of channels of input and output images. Default: None (no channel augmentation)
-- `filter` (PIL.Image.Resampling): resampling filters. Default (and recommended): BICUBIC
-- `normalize` (bool, optional): whether to change the range of values to the original values after resize. Default: True
+See [documentation](tree/main/transforms).
 
 ### CleanFeaturesDataset class
 
