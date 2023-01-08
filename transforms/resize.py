@@ -107,7 +107,7 @@ class Resize:
             print(resized_image[c].shape, resized_channel.shape, 'tensor_instance_resize')
             resized_image[c] = resized_channel
         
-        resized_image = self._augment_channels(resized_image)
+        resized_image = self._match_channels(resized_image)
         return resized_image
 
     """
@@ -131,23 +131,31 @@ class Resize:
         return x
 
     """
-    Augment number of channels to meet the image requirements
+    Adjust number of channels to meet the image requirements
     Helper function for tensor_instance_resize()
         input (Tensor): image of variable number of channels [X, H, W]
-    Return an image with augmented channels [C, H, W]
+    Return an image with adjusted number of channels [C, H, W]
     """
-    def _augment_channels(self, image: Tensor) -> Tensor:
-        channels = image.shape[0]
+    def _match_channels(self, tensor: Tensor) -> Tensor:
+        device = tensor.device
+        channels = tensor.shape[0]
 
-        if self.channels is not None and channels < self.channels:
-            if channels == 1:  # Grayscale image
-                # Increase channel dimension with same data (just view, no copy)
-                image = image.expand(self.channels, -1, -1)
+        if self.channels is not None and self.channels != channels:
+            if channels == 1 and self.channels == 3:  # L to RGB
+                mode_in = 'L'
+                mode_out = 'RGB'
+            if channels == 3 and self.channels == 1:  # RGB to L
+                mode_in = 'RGB'
+                mode_out = 'L'
             else:
-                raise NotImplementedError(f"Currently no strategy to augment "
+                raise NotImplementedError(f"Currently no strategy to adjust "
                                           f"images of {channels} channels to "
                                           f"{self.channels} channels")
-        return image
+            
+            image = F.to_pil_image(tensor, mode=mode_in)  # PIL Image [W, H, C]
+            image = image.convert(mode=mode_out)  # Convert to target mode
+            tensor = F.to_tensor(image).to(device)  # Tensor [C, H, W]
+        return tensor
 
     """
     Resize a single channel tensor
@@ -159,9 +167,7 @@ class Resize:
         device = channel.device
         im = F.to_pil_image(channel, mode='F')  # PIL Image, 32-bit floating point [W, H]
         im_r = self.image_channel_resize(im)  # Clean resize
-        ch_r = F.pil_to_tensor(im_r).to(device)  # Tensor, float32 [H, W]
-        print(ch_r.shape, ch_r.dtype, 'tensor_channel_resize')
-        # return torch.tensor(np.asarray(resized_channel_im, dtype=np.float32), device=device)
+        ch_r = F.to_tensor(im_r).to(device)  # Tensor, float32 [H, W]
         return ch_r
 
     """
