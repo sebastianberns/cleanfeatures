@@ -164,7 +164,7 @@ targets = cf.targets  # Only available if data set provides labels
 
 ### Resize transform
 
-See [documentation](tree/main/transforms).
+See [documentation](https://github.com/sebastianberns/cleanfeatures/tree/main/transforms).
 
 ### CleanFeaturesDataset class
 
