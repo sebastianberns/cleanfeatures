@@ -104,7 +104,6 @@ class Resize:
             resized_channel = self.tensor_channel_resize(channel)
             if self.normalize:
                 resized_channel = self._normalize_channel_after_resize(resized_channel, vmin, vmax)
-            print(resized_image[c].shape, resized_channel.shape, 'tensor_instance_resize')
             resized_image[c] = resized_channel
         
         resized_image = self._match_channels(resized_image)
@@ -189,7 +188,6 @@ class Resize:
     """
     def image_channel_resize(self, channel: PILImage) -> PILImage:
         resized_channel = channel.resize((self.width, self.height), resample=self.filter)
-        print(resized_channel.size, resized_channel.getbands(), 'image_channel_resize')
         return resized_channel
 
     def __repr__(self) -> str:
