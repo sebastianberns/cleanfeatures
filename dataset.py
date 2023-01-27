@@ -26,17 +26,17 @@ class CleanFeaturesDataset(Dataset[Tuple[Tensor, Optional[Tensor]]]):
 
         data = torch.load(path, map_location=map_location)
         self.features = data['features']
-        self.targets = data['targets']
+        self.targets = data['targets'] if 'targets' in data.keys() else None
         self.data = self.features  # Alias
         self.num_features = self.features.size(1)
 
-        if self.targets:
+        if self.targets is not None:
             assert self.features.size(0) == len(self.targets), (f"Size mismatch "
                 f"between features ({self.features.size(0):,} samples) and "
                 f"targets ({len(self.targets):,} labels)")
 
     def __getitem__(self, index) -> Tuple[Tensor, Optional[Tensor]]:
-        if self.targets:
+        if self.targets is not None:
             return self.features[index], self.targets[index]
         return self.features[index], None
 
