@@ -143,7 +143,7 @@ class Resize:
             if channels == 1 and self.channels == 3:  # L to RGB
                 mode_in = 'L'
                 mode_out = 'RGB'
-            if channels == 3 and self.channels == 1:  # RGB to L
+            elif channels == 3 and self.channels == 1:  # RGB to L
                 mode_in = 'RGB'
                 mode_out = 'L'
             else:
