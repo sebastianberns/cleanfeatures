@@ -142,6 +142,7 @@ cf.compute_features_from_dataset(dataset, num_samples=50_000, batch_size=128,
 - `batch_size` (int, optional): Batch size for sampling. Default: 128.
 - `num_workers` (int, optional): Number of parallel threads. Best practice is to set to the number of CPU threads available. Default: 0.
 - `shuffle` (bool, optional): Indicates whether samples will be randomly shuffled or not. Default: False.
+- `sampler` (Sampler or Iterable, optional): Sampling strategy, instance of `Sampler` or `Iterable` with `__len__` implemented. If set, `shuffle` has to be None. Default: None
 
 #### save
 

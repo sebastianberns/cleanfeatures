@@ -2,13 +2,13 @@
 
 import logging
 from pathlib import Path
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, Iterable
 
 import numpy as np
 import torch
 from torch import nn
 from torch import Tensor
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Sampler
 
 from . import models
 from .transforms import Resize
@@ -243,16 +243,20 @@ class CleanFeatures:
             is to set to the number of CPU threads available. Default: 0
         shuffle (bool, optional): Indicates whether samples will be randomly
             shuffled or not. Default: False
+        sampler (Sampler or Iterable, optional): Sampling strategy, instance of 
+            Sampler or Iterable with `__len__` implemented. If set, `shuffle` 
+            has to be None. Default: None
 
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
     def compute_features_from_dataset(self, dataset: Dataset, num_samples: int, batch_size: int = 128, 
-                                      num_workers: int = 0, shuffle: bool = False) -> Tuple[Tensor, Optional[Tensor]]:
+                                      num_workers: int = 0, shuffle: Optional[bool] = None, 
+                                      sampler: Optional[Union[Sampler, Iterable]] = None) -> Tuple[Tensor, Optional[Tensor]]:
         logging.info(f"Computing features for {num_samples:,} samples from data set")
 
-        dataloader = DataLoader(dataset, batch_size=batch_size,
-                                num_workers=num_workers, shuffle=shuffle)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, 
+                                sampler=sampler, num_workers=num_workers)
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
                                dtype=self.dtype, device=self.device)  # Allocate memory on device
