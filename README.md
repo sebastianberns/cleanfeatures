@@ -47,7 +47,11 @@ features = cf(images)  # 3.
 
 1. Import the main class.
 2. Create a new instance, optionally providing a directory path. This can be either the place the model checkpoint is already saved, or the place it should be downloaded and saved to.
-3. Pass a batch of images to compute the corresponding 'clean' features
+3. Pass a data source to compute the corresponding clean features.
+
+### Recommendations
+
+- Device: keep your raw data on CPU and specify the target device (e.g. GPU) in the `CleanFeatures` constructor. Resizing needs to be done on the CPU (via Pillow). Passing the raw data to device before introduces unnecessary back-and-forth synchronization between devices. The exception is the generator model data source, which generates images on device.
 
 ### CleanFeatures class
 

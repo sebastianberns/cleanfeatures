@@ -74,7 +74,7 @@ class CleanFeatures:
 
         logging.info('Loading model')
         model_fn = getattr(models, model)  # Get callable from string
-        self.model = model_fn(path=model_path, device=self.device, **kwargs)
+        self.model = model_fn(path=model_path, device=self.device, **kwargs)  # Load embedding model to device
 
         logging.info('Building resize')
         self.resize = Resize(width=self.model.input_width,
@@ -124,11 +124,11 @@ class CleanFeatures:
     __call__ = _handle_input
 
     """
-    Perform a gradient-free model forward pass
+    Perform a gradient-free model forward pass on device (GPU if available)
     """
     def _model_fwd(self, input: Tensor) -> Tensor:
         with torch.no_grad():
-            return self.model(input)
+            return self.model(input.to(self.device))
 
     """
     Augment data dimensions to make it meet the model input requirements
@@ -161,9 +161,9 @@ class CleanFeatures:
     Returns a tensor of features [B, F], where F is the number of features
     """
     def compute_features(self, input: Tensor) -> Tensor:
-        input = self.resize(input)  # Clean resize
+        input = self.resize(input)  # Clean resize on CPU
         input = self._augment_dimensions(input)  # Adjust input dimensions
-        features = self._model_fwd(input)  # Embed model forward pass
+        features = self._model_fwd(input)  # Embed model forward pass (on GPU if available)
         features = features.to(self.dtype)  # Convert to data type
         return features
 
@@ -181,7 +181,7 @@ class CleanFeatures:
         num_samples = samples.shape[0]  # Number of samples
         logging.info(f"Computing features for {num_samples:,} samples")
         features = torch.zeros((num_samples, self.num_features),
-                               dtype=self.dtype, device=self.device)
+                               dtype=self.dtype, device=self.device)  # Allocate memory on device
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
             b = min(batch_size, (num_samples - c))  # Get batch size ...
@@ -214,7 +214,7 @@ class CleanFeatures:
         logging.info(f"Computing features for {num_samples:,} samples from generator")
         generator.eval()
         features = torch.zeros((num_samples, self.num_features),
-                               dtype=self.dtype, device=self.device)
+                               dtype=self.dtype, device=self.device)  # Allocate memory on device
         c = 0  # Counter
         while c < num_samples:  # Until enough samples have been collected
             b = min(batch_size, (num_samples - c))  # Get batch size ...
@@ -255,7 +255,7 @@ class CleanFeatures:
                                 num_workers=num_workers, shuffle=shuffle)
         dataiterator = iter(dataloader)
         features = torch.zeros((num_samples, self.num_features),
-                               dtype=self.dtype, device=self.device)
+                               dtype=self.dtype, device=self.device)  # Allocate memory on device
 
         targets = None  # Default: do not process targets
         if hasattr(dataset, 'targets'):  # Unless dataset provides targets
@@ -277,7 +277,7 @@ class CleanFeatures:
                                 # last batch may need to be smaller
 
             samples, labels = next(dataiterator)  # Load samples and labels
-            samples = samples[:b].to(self.device)  # Limit and convert
+            samples = samples[:b].to(self.device)  # Limit to batch size and pass to device
             labels = labels[:b].to(self.device)
 
             features[c:c+b] = self.compute_features(samples)  # Compute and append
