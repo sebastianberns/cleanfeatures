@@ -5,7 +5,7 @@ This is a custom implementation of best practices recommended by [Parmar et al. 
 
 CleanFeatures currently supports the following feature embedding models:
 
-- CLIP
+- [CLIP](https://arxiv.org/abs/2103.00020)
 - DVAE (DALL-E)
 - InceptionV3
 - Resnet50
