@@ -6,6 +6,7 @@ This is a custom implementation of best practices recommended by [Parmar et al. 
 CleanFeatures currently supports the following feature embedding models:
 
 - [CLIP](https://arxiv.org/abs/2103.00020)
+- [DreamSim](https://dreamsim-nights.github.io)
 - DVAE (DALL-E)
 - InceptionV3
 - Resnet50
@@ -32,6 +33,7 @@ Include `cleanfeatures` directory in Python path. Currently, this module does no
   - ftfy
   - regex
   - tqdm
+- dreamsim ([ssundaram21/dreamsim](https://github.com/ssundaram21/dreamsim))
 - attrs
 
 ## Usage
@@ -88,6 +90,14 @@ cf = CleanFeatures(model_path='./models', model='InceptionV3', device=None,
   - ViT-B/16
   - ViT-L/14 (default)
   - ViT-L/14@336px
+
+#### DreamSim model-specific arguments
+
+- `dreamsim_type` (str, optional): choice of pre-trained DreamSim model. Options:
+  - ensemble (default; all below models together)
+  - dino_vitb16
+  - clip_vitb32
+  - open_clip_vitb32
 
 ### Methods
 

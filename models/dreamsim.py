@@ -14,8 +14,7 @@ class DreamSim(nn.Module):
         device (str or device, optional): which device to load the model checkpoint onto
     """
 
-    def __init__(self, path='./models', device=None, 
-                 dreamsim_type="ensemble"):
+    def __init__(self, path='./models', device=None, dreamsim_type="ensemble"):
         super().__init__()
 
         path = Path(path) / 'dreamsim'  # Make sure this is a Path object
