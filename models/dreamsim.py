@@ -17,7 +17,7 @@ class DreamSim(nn.Module):
     def __init__(self, path='./models', device=None, dreamsim_type="ensemble"):
         super().__init__()
 
-        path = Path(path) / 'dreamsim'  # Make sure this is a Path object
+        path = Path(path)  # Make sure this is a Path object
         self.device = device
 
         assert dreamsim_type in dreamsim_args['model_config'].keys(), f"DreamSim type '{dreamsim_type}' not available"
