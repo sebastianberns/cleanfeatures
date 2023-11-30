@@ -105,7 +105,7 @@ class CLIP(nn.Module):
             logging.info(f"Downloading {self.name} to {path}")
 
         # download the network if it is not present at the given directory
-        self.base, _ = clip.load(clip_model, device=device, jit=False,
+        self.base, _ = clip.load(clip_model, device=device, jit=True,
                                  download_root=path)
 
         # CLIP preprocessing normalization
