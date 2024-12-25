@@ -43,7 +43,7 @@ Attributes
 Methods
     self: Compute features from any type of input
     compute_features: Direct access to processing pipeline
-    compute_features_from_generator: Sample generator model
+    compute_features_from_model: Sample image-generating model
     compute_features_from_dataset: Get sample from dataset
     save: Save computed feature tensor to path
     set_log_level: Set level of logging output
@@ -100,14 +100,14 @@ class CleanFeatures:
     Redirect calls based on input data type
 
         input   Tensor: directly process input
-                Module: sample batch from generator model
+                Module: sample batch from image-generating model
                 Dataset: load batch from data set
     """
     def _handle_input(self, input: Union[Tensor, nn.Module, Dataset], **kwargs) -> Union[Tensor, Tuple[Tensor, Optional[Tensor]]]:
         if isinstance(input, Tensor):  # Tensor ready for processing
             return self.compute_features_from_samples(input, **kwargs)
-        elif isinstance(input, nn.Module):  # Generator model
-            return self.compute_features_from_generator(input, **kwargs)
+        elif isinstance(input, nn.Module):  # Image-generating model
+            return self.compute_features_from_model(input, **kwargs)
         elif isinstance(input, Dataset):  # Data set
             return self.compute_features_from_dataset(input, **kwargs)
         else:
@@ -171,7 +171,7 @@ class CleanFeatures:
     Compute features from a tensor samples 
     Conventient when number of samples is too big to be parsed in one go
 
-        samples (Tensor): Pre-trained generator model
+        samples (Tensor): Matrix of image samples [B, C, W, H]
         batch_size (int, optional): Batch size for sample processing. Default: 128
 
     Returns a tensor of features [B, F] in range (-1, +1),
@@ -197,22 +197,27 @@ class CleanFeatures:
         return features
 
     """
-    Compute features of samples from pre-trained generator
-    Expected output of the generator is a tensor of size [B, C, W, H],
+    Compute features of samples from pre-trained image-generating model
+    Expected output of the model is a tensor of size [B, C, W, H],
     where B is the batch size equal to the input
 
-        generator (Module): Pre-trained generator model
-        z_dim (int): Number of generator input dimensions
+        model (Module): Pre-trained image-generating model
+        z_dim (int): Number of model input dimensions
         num_samples (int): Number of samples to generate and process
-        batch_size (int, optional): Batch size for generator sampling. Default: 128
+        batch_size (int, optional): Batch size for model sampling. Default: 128
 
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_generator(self, generator: nn.Module, z_dim: int, num_samples: int,
-                                        batch_size: int = 128) -> Tensor:
-        logging.info(f"Computing features for {num_samples:,} samples from generator")
-        generator.eval()
+    def compute_features_from_model(
+        self,
+        model: nn.Module,
+        z_dim: int,
+        num_samples: int,
+        batch_size: int = 128,
+    ) -> Tensor:
+        logging.info(f"Computing features for {num_samples:,} samples from model")
+        model.eval()
         features = torch.zeros((num_samples, self.num_features),
                                dtype=self.dtype, device=self.device)  # Allocate memory on device
         c = 0  # Counter
@@ -222,7 +227,7 @@ class CleanFeatures:
 
             z = torch.randn((b, z_dim), device=self.device)  # Random samples
             with torch.no_grad():
-                samples = generator(z)  # Generate images
+                samples = model(z)  # Generate images
 
             features[c:c+b] = self.compute_features(samples)  # Compute and append
             c += b  # Increase counter
@@ -231,6 +236,9 @@ class CleanFeatures:
         self._features = features
         logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features
+
+    # Alias for backward compatibility
+    compute_features_from_generator = compute_features_from_model
 
     """
     Compute features of samples from data set
