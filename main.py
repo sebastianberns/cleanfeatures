@@ -58,8 +58,14 @@ class CleanFeatures:
         log (str): Log level
         kwargs (dict): Additional parameters for embedding model
     """
-    def __init__(self, model_path: Union[str, Path] = './models', model: str = 'InceptionV3', 
-                 device: Optional[Union[str, torch.device]] = None, log: str = 'warning', **kwargs) -> None:
+    def __init__(
+        self, 
+        model_path: Union[str, Path] = './models', 
+        model: str = 'InceptionV3', 
+        device: Optional[Union[str, torch.device]] = None, 
+        log: str = 'warning', 
+        **kwargs
+    ) -> None:
 
         # Check if model is implemented
         assert hasattr(models, model), f"Model '{model}' is not available"
@@ -103,7 +109,11 @@ class CleanFeatures:
                 Module: sample batch from image-generating model
                 Dataset: load batch from data set
     """
-    def _handle_input(self, input: Union[Tensor, nn.Module, Dataset], **kwargs) -> Union[Tensor, Tuple[Tensor, Optional[Tensor]]]:
+    def _handle_input(
+        self, 
+        input: Union[Tensor, nn.Module, Dataset], 
+        **kwargs
+    ) -> Union[Tensor, Tuple[Tensor, Optional[Tensor]]]:
         if isinstance(input, Tensor):  # Tensor ready for processing
             return self.compute_features_from_samples(input, **kwargs)
         elif isinstance(input, nn.Module):  # Image-generating model
@@ -177,7 +187,11 @@ class CleanFeatures:
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_samples(self, samples: Tensor, batch_size: int = 128) -> Tensor:
+    def compute_features_from_samples(
+        self, 
+        samples: Tensor, 
+        batch_size: int = 128
+    ) -> Tensor:
         num_samples = samples.shape[0]  # Number of samples
         logging.info(f"Computing features for {num_samples:,} samples")
         features = torch.zeros((num_samples, self.num_features),
@@ -214,7 +228,7 @@ class CleanFeatures:
         model: nn.Module,
         z_dim: int,
         num_samples: int,
-        batch_size: int = 128,
+        batch_size: int = 128
     ) -> Tensor:
         logging.info(f"Computing features for {num_samples:,} samples from model")
         model.eval()
@@ -258,9 +272,14 @@ class CleanFeatures:
     Returns a tensor of features [B, F] in range (-1, +1),
     where F is the number of features
     """
-    def compute_features_from_dataset(self, dataset: Dataset, num_samples: int, batch_size: int = 128, 
-                                      num_workers: int = 0, shuffle: Optional[bool] = None, 
-                                      sampler: Optional[Union[Sampler, Iterable]] = None) -> Tuple[Tensor, Optional[Tensor]]:
+    def compute_features_from_dataset(
+        self, 
+        dataset: Dataset, 
+        num_samples: int, 
+        batch_size: int = 128, 
+        num_workers: int = 0, shuffle: Optional[bool] = None, 
+        sampler: Optional[Union[Sampler, Iterable]] = None
+    ) -> Tuple[Tensor, Optional[Tensor]]:
         logging.info(f"Computing features for {num_samples:,} samples from data set")
 
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, 
@@ -304,7 +323,11 @@ class CleanFeatures:
         logging.info("Computed features for {0:,} batch items in {1} dimensions.".format(*features.shape))
         return features, targets
 
-    def save(self, path: Union[str, Path] = "./", name: str = "features") -> None:
+    def save(
+        self, 
+        path: Union[str, Path] = "./", 
+        name: str = "features"
+    ) -> None:
         dir = self._get_path(path)
         dir.mkdir(exist_ok=True)  # Create save directory
         save_path = dir/f"{name}.pt"
