@@ -53,7 +53,7 @@ features = cf(images)  # 3.
 
 ### Recommendations
 
-- Device: keep your raw data on CPU and specify the target device (e.g. GPU) in the `CleanFeatures` constructor. Resizing needs to be done on the CPU (via Pillow). Passing the raw data to device before introduces unnecessary back-and-forth synchronization between devices. The exception is the generator model data source, which generates images on device.
+- Device: keep your raw data on CPU and specify the target device (e.g. GPU) in the `CleanFeatures` constructor. Resizing needs to be done on the CPU (via Pillow). Passing the raw data to device before introduces unnecessary back-and-forth synchronization between devices. The exception is the generative model data source, which generates images on device.
 
 ### CleanFeatures class
 
@@ -101,7 +101,7 @@ cf = CleanFeatures(model_path='./models', model='InceptionV3', device=None,
 
 ### Methods
 
-The class provides three methods to process different types of input: a data tensor, a generator network, or a dataloader.
+The class provides three methods to process different types of input: a data tensor, a generative model, or a dataloader.
 
 All methods return a tensor of embedded features [B, F], where F is the number of features.
 
@@ -118,19 +118,23 @@ cf.compute_features(input)
   - Shape [C, W, H]: single image.
   - Shape [W, H]: individual channel.
 
-#### compute_features_from_generator
+#### compute_features_from_model
 
-Directly samples from a pre-trained generator.
+Directly samples from a pre-trained generative model. 
 
 ```python
-cf.compute_features_from_generator(generator, z_dim=512, num_samples=50_000,
-                                   batch_size=128)
+rng = torch.Generator(device='gpu')  # Optional random number generator
+rng.manual_seed(42)  # Random seed for sampling
+cf.compute_features_from_model(model, z_dim=512, num_samples=50_000, batch_size=128, rng=rng)
 ```
 
-- `generator` (Module): Pre-trained generator model.
-- `z_dim` (int, optional): Number of generator input dimensions. Default: 512.
+- `model` (Module): Pre-trained generative model.
+- `z_dim` (int, optional): Number of model input dimensions. Default: 512.
 - `num_samples` (int, optional): Number of samples to generate and process. Default: 50,000.
-- `batch_size` (int, optional): Batch size for generator sampling. Default: 128.
+- `batch_size` (int, optional): Batch size for model sampling. Default: 128.
+- `rng` (Generator, optional): Random number generator for seeded sampling.
+
+Alias: `compute_features_from_generator(...)`
 
 #### compute_features_from_dataset
 
