@@ -228,7 +228,8 @@ class CleanFeatures:
         model: nn.Module,
         z_dim: int,
         num_samples: int,
-        batch_size: int = 128
+        batch_size: int = 128,
+        rng: Optional[torch.Generator] = None
     ) -> Tensor:
         logging.info(f"Computing features for {num_samples:,} samples from model")
         model.eval()
@@ -239,7 +240,7 @@ class CleanFeatures:
             b = min(batch_size, (num_samples - c))  # Get batch size ...
                                 # last batch may need to be smaller
 
-            z = torch.randn((b, z_dim), device=self.device)  # Random samples
+            z = torch.randn((b, z_dim), generator=rng, device=self.device)  # Random samples
             with torch.no_grad():
                 samples = model(z)  # Generate images
 
