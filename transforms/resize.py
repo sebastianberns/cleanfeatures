@@ -1,7 +1,6 @@
 from enum import IntEnum
 from typing import Optional, Union
 
-import numpy as np
 from PIL import Image  # type: ignore[import]
 from PIL.Image import Image as PILImage  # type: ignore[import]
 import torch
@@ -13,6 +12,8 @@ if not hasattr(Image, 'Resampling'):  # Pillow < 9.1
     # Constants deprecated since version 9.1.0
     # Replaced by enum.IntEnum class
     Image.Resampling = Image
+
+# filters = Image.Resampling if hasattr(Image, 'Resampling') else Image
 
 
 class Resize:
