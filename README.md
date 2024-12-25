@@ -123,7 +123,7 @@ cf.compute_features(input)
 Directly samples from a pre-trained generative model. 
 
 ```python
-rng = torch.Generator(device='gpu')  # Optional random number generator
+rng = torch.Generator(device='cuda')  # Optional random number generator
 rng.manual_seed(42)  # Random seed for sampling
 cf.compute_features_from_model(model, z_dim=512, num_samples=50_000, batch_size=128, rng=rng)
 ```
